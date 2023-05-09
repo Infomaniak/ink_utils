@@ -18,6 +18,9 @@ def select_device():
     out = subprocess.run("adb devices", stdout=subprocess.PIPE, shell=True, universal_newlines=True)
     devices = out.stdout.split("\n")[1:]
 
+    while "" in devices:
+        devices.remove("")
+
     if len(devices) == 1:
         return devices[0].split("\t")[0]
 
