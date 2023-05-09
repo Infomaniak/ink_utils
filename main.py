@@ -3,7 +3,7 @@
 
 import argparse
 import subprocess
-import uiautomator2 as u2
+
 import inquirer
 
 
@@ -64,10 +64,10 @@ if __name__ == '__main__':
         case "bounds":
             show_layout_bounds()
 
-        case "login":
-            d = u2.connect()
-            out = d.dump_hierarchy()
-            print(out)
+        # case "login":
+        #     d = u2.connect()
+        #     out = d.dump_hierarchy()
+        #     print(out)
 
         case other:
             print("Command not handled")
