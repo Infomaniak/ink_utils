@@ -34,7 +34,8 @@ def clear_mail_db():
     global device_id
     device_id = select_device()
 
-    adb("exec-out run-as com.infomaniak.mail find ./files -name 'Mailbox-*.realm' -exec rm {} \\;")
+    adb("exec-out run-as com.infomaniak.mail find ./files -name 'Mailbox-*-*.realm*' -exec rm {} \\;")
+    adb("exec-out run-as com.infomaniak.mail find ./files -name 'network-response-body-*' -exec rm {} \\;")
 
 
 def show_layout_bounds():
