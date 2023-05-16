@@ -5,6 +5,7 @@ import argparse
 import subprocess
 
 import inquirer
+import eml_writer as ew
 
 
 def adb(command_args):
@@ -30,7 +31,7 @@ def select_device():
     return device
 
 
-def clear_mail_db():
+def clear_mail_db(args):
     global device_id
     device_id = select_device()
 
@@ -39,7 +40,7 @@ def clear_mail_db():
     adb("exec-out run-as com.infomaniak.mail find ./files -name 'network-response-body-*' -exec rm {} \\;")
 
 
-def show_layout_bounds():
+def show_layout_bounds(args):
     global device_id
     device_id = select_device()
 
@@ -50,6 +51,10 @@ def show_layout_bounds():
     adb("shell service call activity 1599295570")
 
 
+def generate_eml(args):
+    ew.new_eml(args.subject, args.sender, args.to, args.cc, args.bcc, args.html)
+
+
 if __name__ == '__main__':
     device_id = None
 
@@ -57,22 +62,19 @@ if __name__ == '__main__':
     subparsers = parser.add_subparsers(dest='cmd', help='sub-command help')
 
     clear_mail_db_parser = subparsers.add_parser("rmdb")
+    clear_mail_db_parser.set_defaults(func=show_layout_bounds)
 
     bounds_parser = subparsers.add_parser("bounds")
+    bounds_parser.set_defaults(func=show_layout_bounds)
+
+    eml_parser = subparsers.add_parser("eml")
+    eml_parser.add_argument("html")
+    eml_parser.add_argument("-s", "--subject", dest="subject")
+    eml_parser.add_argument("-f", "--from", dest="sender")
+    eml_parser.add_argument("-t", "--to", dest="to")
+    eml_parser.add_argument("-c", "--cc", dest="cc")
+    eml_parser.add_argument("-b", "--bcc", dest="bcc")
+    eml_parser.set_defaults(func=generate_eml)
 
     args = parser.parse_args()
-
-    match args.cmd:
-        case "rmdb":
-            clear_mail_db()
-
-        case "bounds":
-            show_layout_bounds()
-
-        # case "login":
-        #     d = u2.connect()
-        #     out = d.dump_hierarchy()
-        #     print(out)
-
-        case other:
-            print("Command not handled")
+    args.func(args)
