@@ -70,7 +70,7 @@ if __name__ == '__main__':
     bounds_parser.set_defaults(func=show_layout_bounds)
 
     eml_parser = subparsers.add_parser("eml", help="creates an eml file in the current directory")
-    eml_parser.add_argument("html", help="html code of the content of the mail")
+    eml_parser.add_argument("html", nargs="?", help="html code of the content of the mail", )
     eml_parser.add_argument("-s", "--subject", dest="subject", help="subject of the mail")
     eml_parser.add_argument("-f", "--from", dest="sender", help="sender of the mail. Comma separated if there's more "
                                                                 "than one. To have a recipient with a name and an "
