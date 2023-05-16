@@ -52,7 +52,7 @@ def show_layout_bounds(args):
 
 
 def generate_eml(args):
-    ew.new_eml(args.subject, args.sender, args.to, args.cc, args.bcc, args.html)
+    ew.new_eml(args.subject, args.sender, args.to, args.cc, args.html)
 
 
 if __name__ == '__main__':
@@ -61,19 +61,24 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()  # (description="Arguments for kmail")
     subparsers = parser.add_subparsers(dest='cmd', help='sub-command help')
 
-    clear_mail_db_parser = subparsers.add_parser("rmdb")
+    clear_mail_db_parser = subparsers.add_parser("rmdb", help="deletes all of the databases containg mails or "
+                                                              "attachment cache but keeps the account logged in using"
+                                                              " adb")
     clear_mail_db_parser.set_defaults(func=show_layout_bounds)
 
-    bounds_parser = subparsers.add_parser("bounds")
+    bounds_parser = subparsers.add_parser("bounds", help="toggles layout bounds for the android device using adb")
     bounds_parser.set_defaults(func=show_layout_bounds)
 
-    eml_parser = subparsers.add_parser("eml")
-    eml_parser.add_argument("html")
-    eml_parser.add_argument("-s", "--subject", dest="subject")
-    eml_parser.add_argument("-f", "--from", dest="sender")
-    eml_parser.add_argument("-t", "--to", dest="to")
-    eml_parser.add_argument("-c", "--cc", dest="cc")
-    eml_parser.add_argument("-b", "--bcc", dest="bcc")
+    eml_parser = subparsers.add_parser("eml", help="creates an eml file in the current directory")
+    eml_parser.add_argument("html", help="html code of the content of the mail")
+    eml_parser.add_argument("-s", "--subject", dest="subject", help="subject of the mail")
+    eml_parser.add_argument("-f", "--from", dest="sender", help="sender of the mail. Comma separated if there's more "
+                                                                "than one. To have a recipient with a name and an "
+                                                                "email follow this pattern: name <email@domain.ext>")
+    eml_parser.add_argument("-t", "--to", dest="to", help="recipient of the mail. Comma separated if there's more "
+                                                          "than one")
+    eml_parser.add_argument("-c", "--cc", dest="cc", help="recipient of a copy of the mail. Comma separated if "
+                                                          "there's mor than one")
     eml_parser.set_defaults(func=generate_eml)
 
     args = parser.parse_args()

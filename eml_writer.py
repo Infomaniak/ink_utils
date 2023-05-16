@@ -8,7 +8,6 @@ default_subject = "Email for testing purpose"
 default_sender = "Alice <alice@ink.i>"
 default_recipient = "Bob <bob@ink.i>"
 default_carbon_copy = None
-default_blink_carbon_copy = None
 default_html = """\
 <html>
     <head></head>
@@ -44,7 +43,7 @@ def add_field(eml, field, value):
         eml[field] = value
 
 
-def new_eml(subject, sender, recipient, carbon_copy, blink_carbon_copy, html):
+def new_eml(subject, sender, recipient, carbon_copy, html):
     # Set default values if they do not exist
     if is_empty(subject):
         subject = default_subject
@@ -58,9 +57,6 @@ def new_eml(subject, sender, recipient, carbon_copy, blink_carbon_copy, html):
     if is_empty(carbon_copy):
         carbon_copy = default_carbon_copy
 
-    if is_empty(blink_carbon_copy):
-        blink_carbon_copy = default_blink_carbon_copy
-
     date = formatdate(localtime=True)
 
     if is_empty(html):
@@ -72,7 +68,6 @@ def new_eml(subject, sender, recipient, carbon_copy, blink_carbon_copy, html):
     add_field(eml, 'From', sender)
     add_field(eml, 'To', recipient)
     add_field(eml, 'Cc', carbon_copy)
-    add_field(eml, 'Bcc', blink_carbon_copy)
     add_field(eml, 'Date', date)
     part = MIMEText(html, 'html')
 
