@@ -64,7 +64,7 @@ if __name__ == '__main__':
     clear_mail_db_parser = subparsers.add_parser("rmdb", help="deletes all of the databases containg mails or "
                                                               "attachment cache but keeps the account logged in using"
                                                               " adb")
-    clear_mail_db_parser.set_defaults(func=show_layout_bounds)
+    clear_mail_db_parser.set_defaults(func=clear_mail_db)
 
     bounds_parser = subparsers.add_parser("bounds", help="toggles layout bounds for the android device using adb")
     bounds_parser.set_defaults(func=show_layout_bounds)
