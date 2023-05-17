@@ -2,9 +2,10 @@
 # PYTHON_ARGCOMPLETE_OK
 
 import argparse
+import pathlib
 import subprocess
-
 import inquirer
+
 import eml_writer as ew
 
 
@@ -55,6 +56,26 @@ def generate_eml(args):
     ew.new_eml(args.subject, args.sender, args.to, args.cc, args.html)
 
 
+def copy_last_video(args):
+    global device_id
+    device_id = select_device()
+
+    root = pathlib.Path.home().__str__() + "/"
+    desktop = "Desktop/"
+    destination = root + desktop
+    if args.here:
+        destination = "./"
+
+    movie_dir = "storage/emulated/0/Movies/"
+    filename = adb("shell ls -tp " + movie_dir + " | grep -v /$ | head -1").stdout.strip()
+    file = movie_dir + filename
+    adb("pull " + file + " " + destination)
+    print("Pulled " + filename + " successfully")
+
+    if args.open:
+        subprocess.Popen(("open", destination + filename), cwd=None)
+
+
 if __name__ == '__main__':
     device_id = None
 
@@ -80,6 +101,14 @@ if __name__ == '__main__':
     eml_parser.add_argument("-c", "--cc", dest="cc", help="recipient of a copy of the mail. Comma separated if "
                                                           "there's mor than one")
     eml_parser.set_defaults(func=generate_eml)
+
+    last_video_parser = subparsers.add_parser("lastvid",
+                                              help="copies last recorded video of the emulator to the desktop")
+    last_video_parser.add_argument("-o", "--open", action="store_true", default=False,
+                                   help="opens the file in default player at the same time")
+    last_video_parser.add_argument("--here", action="store_true", default=False,
+                                   help="downloads the file in current directory instead of desktop")
+    last_video_parser.set_defaults(func=copy_last_video)
 
     args = parser.parse_args()
     args.func(args)
