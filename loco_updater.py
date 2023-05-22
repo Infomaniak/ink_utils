@@ -7,7 +7,7 @@ import requests
 import zipfile
 
 script_folder = os.path.dirname(__file__)
-config_filename = "settings.cfg"
+config_filename = "settings.txt"
 config_file = script_folder + '/' + config_filename
 missing_config_file = True
 
