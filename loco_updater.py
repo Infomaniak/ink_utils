@@ -1,25 +1,10 @@
 import os
 import shutil
-
-import configparser
 import subprocess
 import requests
 import zipfile
 
-script_folder = os.path.dirname(__file__)
-config_filename = "settings.txt"
-config_file = script_folder + '/' + config_filename
-missing_config_file = True
-
-if os.path.exists(config_file):
-    config = configparser.ConfigParser()
-    config.read_file(open(config_file))
-    loco_key = config.get('loco', 'loco_key')
-    zip_url = f"https://localise.biz/api/export/archive/xml.zip?format=android&filter=android&fallback=en&order=id&key={loco_key}"
-
-    project_root = config.get('loco', 'project_root')
-    project_path = project_root + "/src/main/res"
-    missing_config_file = False
+import config as config
 
 cwd = "/tmp/ink_archive"
 archive_name = "downloaded.zip"
@@ -27,11 +12,10 @@ value_folders = ['values', 'values-de', 'values-es', 'values-fr', 'values-it']
 
 
 def update_loco():
-    if missing_config_file:
-        print(f"Missing {config_filename} file at {script_folder}")
-        return
+    loco_key = config.get('loco', 'loco_key')
+    zip_url = f"https://localise.biz/api/export/archive/xml.zip?format=android&filter=android&fallback=en&order=id&key={loco_key}"
 
-    archive_path = download_zip()
+    archive_path = download_zip(zip_url)
     if archive_path is None:
         return
 
@@ -39,6 +23,9 @@ def update_loco():
 
     with zipfile.ZipFile(archive_path, 'r') as zip_ref:
         zip_ref.extractall(cwd)
+
+    project_root = config.get('loco', 'project_root')
+    project_path = project_root + "/src/main/res"
 
     os.chdir(cwd)
     files = os.listdir('.')
@@ -60,7 +47,7 @@ def update_loco():
     print("Deleting temporary downloaded strings resources")
 
 
-def download_zip():
+def download_zip(zip_url):
     archive_path = cwd + "/" + archive_name
 
     response = requests.get(zip_url)
