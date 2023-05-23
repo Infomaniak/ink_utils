@@ -26,7 +26,7 @@ archive_name = "downloaded.zip"
 value_folders = ['values', 'values-de', 'values-es', 'values-fr', 'values-it']
 
 
-def update_loco(args):
+def update_loco():
     if missing_config_file:
         print(f"Missing {config_filename} file at {script_folder}")
         return

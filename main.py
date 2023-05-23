@@ -10,9 +10,10 @@ import eml_writer as ew
 import loco_updater as lu
 
 
-def adb(command_args):
+def adb(command_args, stderr=None):
     return subprocess.run("adb -s " + device_id + " " + command_args,
                           stdout=subprocess.PIPE,
+                          stderr=stderr,
                           shell=True,
                           universal_newlines=True)
 
@@ -40,6 +41,10 @@ def clear_mail_db(args):
     adb("exec-out run-as com.infomaniak.mail find ./files -name 'Mailbox-*-*.realm*' -exec rm {} \\;")
     adb("exec-out run-as com.infomaniak.mail find ./cache -name '*_cache' -exec rm -r {} \\;")
     adb("exec-out run-as com.infomaniak.mail find ./files -name 'network-response-body-*' -exec rm {} \\;")
+
+    if args.restart:
+        adb("shell am force-stop com.infomaniak.mail")
+        adb("shell monkey -p com.infomaniak.mail -c android.intent.category.LAUNCHER 1", stderr=subprocess.DEVNULL)
 
 
 def show_layout_bounds(args):
@@ -79,7 +84,7 @@ def copy_last_video(args):
 
 
 def update_loco(args):
-    lu.update_loco(args)
+    lu.update_loco()
 
 
 if __name__ == '__main__':
@@ -91,6 +96,8 @@ if __name__ == '__main__':
     clear_mail_db_parser = subparsers.add_parser("rmdb", help="deletes all of the databases containg mails or "
                                                               "attachment cache but keeps the account logged in using"
                                                               " adb")
+    clear_mail_db_parser.add_argument("-r", "--restart", action="store_true", default=False,
+                                      help="also restart the app")
     clear_mail_db_parser.set_defaults(func=clear_mail_db)
 
     bounds_parser = subparsers.add_parser("bounds", help="toggles layout bounds for the android device using adb")
