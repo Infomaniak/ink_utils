@@ -1,3 +1,7 @@
 [loco]
 project_root = /Users/.../android-mail/app
 loco_key =
+
+[login]
+id = bob@infomaniak.com
+pwd = 1234

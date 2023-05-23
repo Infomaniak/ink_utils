@@ -13,9 +13,9 @@ if os.path.exists(config_file):
     config_parser.read_file(open(config_file))
 
 
-def get(section, key):
+def get(section, key, default=configparser._UNSET):
     if missing_config_file:
         print(f"Missing {config_filename} file at {script_folder}")
         quit()
 
-    return config_parser.get(section, key)
+    return config_parser.get(section, key, fallback=default)
