@@ -62,7 +62,7 @@ def update_loco(args):
 
 
 def login(args):
-    lg.login()
+    lg.login(args.add, args.web)
 
 
 if __name__ == '__main__':
@@ -105,6 +105,10 @@ if __name__ == '__main__':
     loco_parser.set_defaults(func=update_loco)
 
     login_parser = subparsers.add_parser("login", help="automated the process of logging in")
+    login_parser.add_argument("-a", "--add", action="store_true", default=False,
+                              help="skip view pager four pages navigation when you add a new account to existing ones")
+    login_parser.add_argument("-w", "--web", action="store_true", default=False,
+                              help="start login inputs from the webview")
     login_parser.set_defaults(func=login)
 
     args = parser.parse_args()

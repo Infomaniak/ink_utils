@@ -5,10 +5,11 @@ from adb import adb, select_device, open_app
 import config as config
 
 sleep_duration = 0.9
+login_page_sleep_duration = 1.5
 login_device_id = None
 
 
-def login():
+def login(skip_view_pager, from_web_view):
     login = config.get("login", "id", None)
     if login is None:
         login = input("Email:")
@@ -24,11 +25,13 @@ def login():
         open_app(login_device_id)
         time.sleep(1)
 
-    # to_fourth_page
-    input_combination("shell input keyevent 61 61 61 61 61 61 61 61 61 66 66 66")
+    if not from_web_view:
+        if not skip_view_pager:
+            # to_fourth_page
+            input_combination("shell input keyevent 61 61 61 61 61 61 61 61 61 66 66 66")
 
-    # click_login
-    input_combination("shell input keyevent 61 61 61 61 61 66")
+        # click_login
+        input_combination("shell input keyevent 61 61 61 61 61 66", login_page_sleep_duration)
 
     # focus_email
     input_combination("shell input keyevent 61 61 61")
@@ -46,9 +49,9 @@ def login():
     input_combination("shell input keyevent 61 61 66")
 
 
-def input_combination(adb_arguments):
+def input_combination(adb_arguments, custom_sleep_duration=sleep_duration):
     adb(adb_arguments, login_device_id)
-    time.sleep(sleep_duration)
+    time.sleep(custom_sleep_duration)
 
 
 def not_running():
