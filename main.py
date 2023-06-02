@@ -103,12 +103,18 @@ def pull_local_file(src_path, dest_path, device_id):
     adb(f"exec-out run-as com.infomaniak.mail cat '{src_path}' > {dest_path}", device_id)
 
 
+def catch_empty_calls(parser):
+    return lambda _: parser.print_usage()
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()  # (description="Arguments for kmail")
+    parser.set_defaults(func=catch_empty_calls(parser))
     subparsers = parser.add_subparsers(help='sub-command help')
 
     # Databases
     db_parser = subparsers.add_parser("db", help="open or rm databases of the project")
+    db_parser.set_defaults(func=catch_empty_calls(db_parser))
     db_subparser = db_parser.add_subparsers(help="db-sub-command help")
 
     db_clear_parser = db_subparser.add_parser("rm", help="deletes all of the databases containg mails or attachment "
