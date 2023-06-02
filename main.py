@@ -32,7 +32,7 @@ def show_layout_bounds(args):
 
     result = adb("shell getprop debug.layout", device_id)
     print("When getting current prop state we get: [" + result.stdout.strip() + "]")
-    new_layout_state = "true" if (result.stdout.strip() == "false") else "false"
+    new_layout_state = "false" if (result.stdout.strip() == "true") else "true"
     print("Setting show layout bounds to " + new_layout_state)
     adb("shell setprop debug.layout " + new_layout_state, device_id)
     adb("shell service call activity 1599295570", device_id)
