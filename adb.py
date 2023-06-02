@@ -1,6 +1,7 @@
 import subprocess
-
 import inquirer
+
+from utils import remove_empty_items
 
 
 def adb(command_args, device_id, stderr=None):
@@ -13,10 +14,7 @@ def adb(command_args, device_id, stderr=None):
 
 def select_device():
     out = subprocess.run("adb devices", stdout=subprocess.PIPE, shell=True, universal_newlines=True)
-    devices = out.stdout.split("\n")[1:]
-
-    while "" in devices:
-        devices.remove("")
+    devices = remove_empty_items(out.stdout.split("\n")[1:])
 
     if len(devices) == 1:
         return devices[0].split("\t")[0]

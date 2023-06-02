@@ -2,10 +2,14 @@
 # PYTHON_ARGCOMPLETE_OK
 
 import argparse
+import os
 import pathlib
+import shutil
 import subprocess
+import inquirer
 
 from adb import adb, select_device, close_app, open_app
+from utils import remove_empty_items
 import eml_writer as ew
 import loco_updater as lu
 import login as lg
@@ -65,9 +69,44 @@ def login(args):
     lg.login(args.add, args.web)
 
 
-if __name__ == '__main__':
-    # device_id = None
+def open_db(args):
+    device_id = select_device()
 
+    ls_files = "ls -lhS ./files"
+    select_columns = "awk '{print $8, $5, $6, $7}'"
+    keep_db = "grep -x 'Mailbox-.*realm\s.*'"
+
+    result = adb(f"shell run-as com.infomaniak.mail {ls_files} | {select_columns} | {keep_db}", device_id)
+    files = remove_empty_items(result.stdout.split("\n"))
+
+    device_selection = [inquirer.List('file', message="Select database", choices=files)]
+    file = inquirer.prompt(device_selection)['file']
+
+    filename = file.split(" ")[0]
+
+    working_directory = "/tmp/ink_db_pull/"
+    if os.path.exists(working_directory):
+        shutil.rmtree(working_directory)
+    os.makedirs(working_directory, exist_ok=True)
+
+    pull_local_file(f"./files/{filename}", f"{working_directory}/{filename}", device_id)
+
+    subprocess.Popen(("open", working_directory + filename), cwd=None)
+
+
+def pull_local_dir(src_path, dest_path, device_id):
+    result = adb(f"exec-out run-as com.infomaniak.mail ls -1 {src_path}", device_id)
+    os.makedirs(dest_path, exist_ok=True)
+    files = remove_empty_items(result.stdout.split("\n"))
+    for file in files:
+        pull_local_file(f"{src_path}/{file}", f"{dest_path}/{file}", device_id)
+
+
+def pull_local_file(src_path, dest_path, device_id):
+    adb(f"exec-out run-as com.infomaniak.mail cat '{src_path}' > {dest_path}", device_id)
+
+
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()  # (description="Arguments for kmail")
     subparsers = parser.add_subparsers(dest='cmd', help='sub-command help')
 
@@ -110,6 +149,9 @@ if __name__ == '__main__':
     login_parser.add_argument("-w", "--web", action="store_true", default=False,
                               help="start login inputs from the webview")
     login_parser.set_defaults(func=login)
+
+    open_db_parser = subparsers.add_parser("db", help="pulls and open a db file")
+    open_db_parser.set_defaults(func=open_db)
 
     args = parser.parse_args()
     args.func(args)
