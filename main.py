@@ -9,7 +9,7 @@ import subprocess
 import inquirer
 
 from adb import adb, select_device, close_app, open_app
-from utils import remove_empty_items
+from utils import remove_empty_items, select_in_list
 import eml_writer as ew
 import loco_updater as lu
 import login as lg
@@ -79,10 +79,7 @@ def open_db(args):
     result = adb(f"shell run-as com.infomaniak.mail {ls_files} | {select_columns} | {keep_db}", device_id)
     files = remove_empty_items(result.stdout.split("\n"))
 
-    device_selection = [inquirer.List('file', message="Select database", choices=files)]
-    file = inquirer.prompt(device_selection)['file']
-
-    filename = file.split(" ")[0]
+    filename = select_in_list("Select database", files).split(" ")[0]
 
     working_directory = "/tmp/ink_db_pull/"
     if os.path.exists(working_directory):

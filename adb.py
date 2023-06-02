@@ -1,7 +1,7 @@
 import subprocess
 import inquirer
 
-from utils import remove_empty_items
+from utils import remove_empty_items, select_in_list
 
 
 def adb(command_args, device_id, stderr=None):
@@ -19,10 +19,7 @@ def select_device():
     if len(devices) == 1:
         return devices[0].split("\t")[0]
 
-    device_selection = [inquirer.List('device', message="What device would you like to use?", choices=devices)]
-    answer = inquirer.prompt(device_selection)
-    device = answer['device'].split("\t")[0]
-    return device
+    return select_in_list("What device would you like to use?", devices).split("\t")[0]
 
 
 def close_app(device_id):
