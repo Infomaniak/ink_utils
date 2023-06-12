@@ -6,7 +6,6 @@ import os
 import pathlib
 import shutil
 import subprocess
-import inquirer
 
 from adb import adb, select_device, close_app, open_app
 from utils import remove_empty_items, select_in_list

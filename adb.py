@@ -15,10 +15,6 @@ def adb(command_args, device_id, stderr=None):
 def select_device():
     out = subprocess.run("adb devices", stdout=subprocess.PIPE, shell=True, universal_newlines=True)
     devices = remove_empty_items(out.stdout.split("\n")[1:])
-
-    if len(devices) == 1:
-        return devices[0].split("\t")[0]
-
     return select_in_list("What device would you like to use?", devices).split("\t")[0]
 
 
