@@ -17,7 +17,7 @@ import login as lg
 def clear_mail_db(args):
     device_id = select_device()
 
-    adb("exec-out run-as com.infomaniak.mail find ./files -name 'Mailbox-*-*.realm*' -exec rm {} \\;", device_id)
+    adb("exec-out run-as com.infomaniak.mail find ./files -name 'Mailbox-*-*.realm*' -exec rm -r {} \\;", device_id)
     adb("exec-out run-as com.infomaniak.mail find ./cache -name '*_cache' -exec rm -r {} \\;", device_id)
     adb("exec-out run-as com.infomaniak.mail find ./files -name 'network-response-body-*' -exec rm {} \\;", device_id)
 
