@@ -106,22 +106,18 @@ def catch_empty_calls(parser):
     return lambda _: parser.print_usage()
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()  # (description="Arguments for kmail")
-    parser.set_defaults(func=catch_empty_calls(parser))
+def define_commands(parser):
     subparsers = parser.add_subparsers(help='sub-command help')
 
     # Databases
     db_parser = subparsers.add_parser("db", help="open or rm databases of the project")
     db_parser.set_defaults(func=catch_empty_calls(db_parser))
     db_subparser = db_parser.add_subparsers(help="db-sub-command help")
-
     db_clear_parser = db_subparser.add_parser("rm", help="deletes all of the databases containg mails or attachment "
                                                          "cache but keeps the account logged in using adb")
     db_clear_parser.add_argument("-r", "--restart", action="store_true", default=False,
                                  help="also restart the app")
     db_clear_parser.set_defaults(func=clear_mail_db)
-
     db_open_parser = db_subparser.add_parser("open", help="pulls and open a db file")
     db_open_parser.set_defaults(func=open_db)
 
@@ -162,6 +158,13 @@ if __name__ == '__main__':
     login_parser.add_argument("-w", "--web", action="store_true", default=False,
                               help="start login inputs from the webview")
     login_parser.set_defaults(func=login)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()  # (description="Arguments for kmail")
+    parser.set_defaults(func=catch_empty_calls(parser))
+
+    define_commands(parser)
 
     # Actual parsing of the user input
     args = parser.parse_args()
