@@ -102,6 +102,34 @@ def pull_local_file(src_path, dest_path, device_id):
     adb(f"exec-out run-as com.infomaniak.mail cat '{src_path}' > {dest_path}", device_id)
 
 
+def force_dark_mode(args):
+    device_id = select_device()
+    set_dark_mode("yes", device_id)
+
+
+def force_light_mode(args):
+    device_id = select_device()
+    set_dark_mode("no", device_id)
+
+
+def toggle_dark_light_mode(args):
+    device_id = select_device()
+
+    result = adb('shell "cmd uimode night"', device_id)
+
+    is_night_mode_output = result.stdout.strip()
+    start_index = is_night_mode_output.rindex(": ") + 2
+
+    is_night_mode = is_night_mode_output[start_index:] == "yes"
+    next_state = "no" if is_night_mode else "yes"
+
+    set_dark_mode(next_state, device_id)
+
+
+def set_dark_mode(yes_or_no, device_id):
+    adb(f'shell "cmd uimode night {yes_or_no}"', device_id)
+
+
 def catch_empty_calls(parser):
     return lambda _: parser.print_usage()
 
@@ -158,6 +186,17 @@ def define_commands(parser):
     login_parser.add_argument("-w", "--web", action="store_true", default=False,
                               help="start login inputs from the webview")
     login_parser.set_defaults(func=login)
+
+    # Dark mode
+    dark_mode_parser = subparsers.add_parser("color", help="changes dark and light mode")
+    dark_mode_parser.set_defaults(func=catch_empty_calls(dark_mode_parser))
+    color_subparser = dark_mode_parser.add_subparsers(help="db-sub-command help")
+    dark_parser = color_subparser.add_parser("dark", help="sets dark mode")
+    dark_parser.set_defaults(func=force_dark_mode)
+    light_parser = color_subparser.add_parser("light", help="sets light mode")
+    light_parser.set_defaults(func=force_light_mode)
+    toggle_parser = color_subparser.add_parser("toggle", help="toggles the current dark mode")
+    toggle_parser.set_defaults(func=toggle_dark_light_mode)
 
 
 if __name__ == '__main__':
