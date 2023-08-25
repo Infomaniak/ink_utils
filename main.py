@@ -10,6 +10,7 @@ import subprocess
 import eml_writer as ew
 import loco_updater as lu
 import login as lg
+import git_pr
 from adb import adb, select_device, get_all_devices, close_app, open_app
 from utils import remove_empty_items, select_in_list, accept_substitution
 
@@ -189,6 +190,10 @@ def extract_apk(args):
     print("Extraction finished")
 
 
+def open_pr(branch):
+    output = git_pr.open_pr("external-matomo")
+
+
 def catch_empty_calls(parser):
     return lambda _: parser.print_usage()
 
@@ -280,6 +285,11 @@ def define_commands(parser):
     apk_extraction_parser = subparsers.add_parser("apk", help="extract an installed apk")
     apk_extraction_parser.add_argument("keyword", nargs="?", help="only propose package names that contains this given string")
     apk_extraction_parser.set_defaults(func=extract_apk)
+
+
+    # Pull requests
+    pr_parser = subparsers.add_parser("pr", help="automatically create PR")
+    pr_parser.set_defaults(func=open_pr)
 
 
 if __name__ == '__main__':
