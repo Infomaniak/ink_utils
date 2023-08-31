@@ -1,5 +1,7 @@
-from git_utils import get_branch_parents
+from git_utils import get_local_branches
 
 
 def open_pr(branch):
-    get_branch_parents(branch)
+    branches = get_local_branches()
+    for branch in branches:
+        print(str(branch))
