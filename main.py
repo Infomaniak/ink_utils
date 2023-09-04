@@ -6,9 +6,10 @@ import os
 import pathlib
 import shutil
 import subprocess
+import sys
 
 from adb import adb, select_device, close_app, open_app
-from utils import remove_empty_items, select_in_list
+from utils import remove_empty_items, select_in_list, accept_substitution
 import eml_writer as ew
 import loco_updater as lu
 import login as lg
@@ -38,7 +39,8 @@ def show_layout_bounds(args):
 
 
 def generate_eml(args):
-    ew.new_eml(args.subject, args.sender, args.to, args.cc, args.html)
+    html = accept_substitution(args.html)
+    ew.new_eml(args.subject, args.sender, args.to, args.cc, html)
 
 
 def copy_last_video(args):
@@ -155,7 +157,7 @@ def define_commands(parser):
 
     # Eml
     eml_parser = subparsers.add_parser("eml", help="creates an eml file in the current directory")
-    eml_parser.add_argument("html", nargs="?", help="html code of the content of the mail", )
+    eml_parser.add_argument("html", nargs="?", help="html code of the content of the mail")
     eml_parser.add_argument("-s", "--subject", dest="subject", help="subject of the mail")
     eml_parser.add_argument("-f", "--from", dest="sender", help="sender of the mail. Comma separated if there's more "
                                                                 "than one. To have a recipient with a name and an "
