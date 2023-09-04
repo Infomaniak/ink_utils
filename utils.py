@@ -14,7 +14,7 @@ def select_in_list(message, choices):
 def accept_substitution(input):
     if input is not None and input.startswith("/dev/fd"):
         with open(input, "r") as fd:
-            output = fd.read()
+            output = fd.read().strip()
     else:
         output = input
 
