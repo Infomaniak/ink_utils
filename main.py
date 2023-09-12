@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import sys
 
-from adb import adb, select_device, close_app, open_app
+from adb import adb, select_device, get_all_devices, close_app, open_app
 from utils import remove_empty_items, select_in_list, accept_substitution
 import eml_writer as ew
 import loco_updater as lu
@@ -16,15 +16,19 @@ import login as lg
 
 
 def clear_mail_db(args):
-    device_id = select_device()
+    if args.all:
+        device_ids = get_all_devices()
+    else:
+        device_ids = [select_device()]
 
-    adb("exec-out run-as com.infomaniak.mail find ./files -name 'Mailbox-*-*.realm*' -exec rm -r {} \\;", device_id)
-    adb("exec-out run-as com.infomaniak.mail find ./cache -name '*_cache' -exec rm -r {} \\;", device_id)
-    adb("exec-out run-as com.infomaniak.mail find ./files -name 'network-response-body-*' -exec rm {} \\;", device_id)
+    for device_id in device_ids:
+        adb("exec-out run-as com.infomaniak.mail find ./files -name 'Mailbox-*-*.realm*' -exec rm -r {} \\;", device_id)
+        adb("exec-out run-as com.infomaniak.mail find ./cache -name '*_cache' -exec rm -r {} \\;", device_id)
+        adb("exec-out run-as com.infomaniak.mail find ./files -name 'network-response-body-*' -exec rm {} \\;", device_id)
 
-    if args.restart:
-        close_app(device_id)
-        open_app(device_id)
+        if args.restart:
+            close_app(device_id)
+            open_app(device_id)
 
 
 def show_layout_bounds(args):
@@ -147,6 +151,8 @@ def define_commands(parser):
                                                          "cache but keeps the account logged in using adb")
     db_clear_parser.add_argument("-r", "--restart", action="store_true", default=False,
                                  help="also restart the app")
+    db_clear_parser.add_argument("-a", "--all", action="store_true", default=False,
+                                 help="apply to all connected devices")
     db_clear_parser.set_defaults(func=clear_mail_db)
     db_open_parser = db_subparser.add_parser("open", help="pulls and open a db file")
     db_open_parser.set_defaults(func=open_db)

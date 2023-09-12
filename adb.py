@@ -18,6 +18,13 @@ def select_device():
     return select_in_list("What device would you like to use?", devices).split("\t")[0]
 
 
+def get_all_devices():
+    out = subprocess.run("adb devices", stdout=subprocess.PIPE, shell=True, universal_newlines=True)
+    devices = remove_empty_items(out.stdout.split("\n")[1:])
+    device_ids = [device.split("\t")[0] for device in devices]
+    return device_ids
+
+
 def close_app(device_id):
     adb("shell am force-stop com.infomaniak.mail", device_id)
 
