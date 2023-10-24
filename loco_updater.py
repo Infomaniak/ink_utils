@@ -3,12 +3,21 @@ import shutil
 import subprocess
 import requests
 import zipfile
+import xml.etree.ElementTree as ET
 
 import config as config
+from loco_validation_rules import ExistenceRule
 
 cwd = "/tmp/ink_archive"
 archive_name = "downloaded.zip"
 value_folders = ['values', 'values-de', 'values-es', 'values-fr', 'values-it']
+
+project_root = config.get('loco', 'project_root')
+project_path = project_root + "/src/main/res"
+
+forbidden_sequences = ["'", "...", "ẞ"]
+forbidden_rules = [ExistenceRule(sequence) for sequence in forbidden_sequences]
+rules = [*forbidden_rules]
 
 
 def update_loco():
@@ -23,9 +32,6 @@ def update_loco():
 
     with zipfile.ZipFile(archive_path, 'r') as zip_ref:
         zip_ref.extractall(cwd)
-
-    project_root = config.get('loco', 'project_root')
-    project_path = project_root + "/src/main/res"
 
     os.chdir(cwd)
     files = os.listdir('.')
@@ -83,3 +89,32 @@ def fix_loco_header(target_file):
         fixed_file = file_content.replace(to_replace, replace_with)
         fd.seek(0)
         fd.write(fixed_file)
+
+
+def validate_strings():
+    for value_folder in value_folders:
+        current_file = f'{project_path}/{value_folder}/strings.xml'
+        tree = ET.parse(current_file)
+
+        parts = value_folder.split("-")
+        language = "en" if len(parts) < 2 else parts[-1]
+
+        for element in tree.getroot():
+            validate_item(language, element.tag, element.get("name"), element.text)
+
+
+def validate_item(language, tag, name, value):
+    if tag == "string":
+        validate_string(language, name, value)
+    elif tag == "plurals":
+        validate_plural(language, name, value)
+
+
+def validate_string(language, name, value):
+    for rule in rules:
+        if rule.check(value):
+            rule.warn(language, name, value)
+
+
+def validate_plural(language, name, value):
+    None
