@@ -2,7 +2,14 @@ import re
 
 
 class Rule:
-    def matches(self, input_string):
+    def check(self, input_string, language, string_id):
+        if self.is_matching(input_string):
+            self.warn(language, string_id, input_string)
+            return True
+        else:
+            return False
+
+    def is_matching(self, input_string):
         raise NotImplementedError
 
     def warn(self, language, string_id, string_value):
@@ -20,7 +27,7 @@ class ExistenceRule(Rule):
     def __init__(self, sequence):
         self.sequence = sequence
 
-    def matches(self, input_string):
+    def is_matching(self, input_string):
         return input_string.__contains__(self.sequence)
 
     def get_explanation(self, string_value):
@@ -34,7 +41,7 @@ class FrenchEmailRule(Rule):
 
         self.authorized_words = ["infomaniak", "stockage", "adresse", "application"]
 
-    def matches(self, input_string):
+    def is_matching(self, input_string):
         results = re.search(self.pattern, input_string.lower())
         if results is None:
             return False

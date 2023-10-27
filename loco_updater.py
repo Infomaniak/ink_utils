@@ -120,12 +120,10 @@ def validate_item(language, tag, name, value):
 
 def validate_string(language, name, value):
     for rule in rules:
-        if rule.matches(value):
-            rule.warn(language, name, value)
+        rule.check(value, language, name)
 
     for language_rule in language_rules[language]:
-        if language_rule.matches(value):
-            language_rule.warn(language, name, value)
+        language_rule.check(value, language, name)
 
 
 def validate_plural(language, name, value):
