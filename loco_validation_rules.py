@@ -36,7 +36,7 @@ class ExistenceRule(Rule):
 
 class FrenchEmailRule(Rule):
     def __init__(self):
-        self.pattern = re.compile(r"(?P<prefix>\w+\s)?(?=(?P<email>(e-|e)?mails?))")
+        self.pattern = re.compile(r"(?P<prefix>\w+\s)?(?=(?P<email>\b(e-|e)?mails?))")
         self.reason = None
 
         self.authorized_words = ["infomaniak", "stockage", "adresse", "application"]
