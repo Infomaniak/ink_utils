@@ -25,10 +25,10 @@ def get_string_id_header(language, string_id):
 
 class ExistenceRule(Rule):
     def __init__(self, sequence):
-        self.sequence = sequence
+        self.sequence = sequence.lower()
 
     def is_matching(self, input_string):
-        return input_string.__contains__(self.sequence)
+        return input_string.lower().__contains__(self.sequence)
 
     def get_explanation(self, string_value):
         return f"found forbidden sequence [{self.sequence}]"

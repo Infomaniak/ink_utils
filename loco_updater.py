@@ -15,14 +15,17 @@ value_folders = ['values', 'values-de', 'values-es', 'values-fr', 'values-it']
 project_root = config.get('loco', 'project_root')
 project_path = project_root + "/src/main/res"
 
-forbidden_sequences = ["'", "...", "ẞ"]
+forbidden_sequences = ["'", "..."]
 forbidden_rules = [ExistenceRule(sequence) for sequence in forbidden_sequences]
 rules = [*forbidden_rules]
 
 language_rules = {
-    "en": [],
+    "en": [ExistenceRule("e-mail")],
     "fr": [FrenchEmailRule()],
-    "de": [],
+    "de": [
+        ExistenceRule("ẞ"),
+        ExistenceRule("gespräch"),
+    ],
     "it": [],
     "es": []
 }
@@ -130,5 +133,5 @@ def validate_plural(plural, language, name):
     for element in plural:
         plural_name = f"{name}-{element.get('quantity')}"
         plural_value = element.text
-        
+
         validate_string(language, plural_name, plural_value)
