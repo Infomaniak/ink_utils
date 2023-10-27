@@ -29,8 +29,10 @@ class ExistenceRule(Rule):
 
 class FrenchEmailRule(Rule):
     def __init__(self):
-        self.pattern = re.compile(r"(?P<adresse>adresses?)?\s(?P<email>(e-|e)?mails?)")
+        self.pattern = re.compile(r"(?P<prefix>\w+\s)?(?=(?P<email>(e-|e)?mails?))")
         self.reason = None
+
+        self.authorized_words = ["infomaniak", "stockage", "adresse", "application"]
 
     def matches(self, input_string):
         results = re.search(self.pattern, input_string.lower())
@@ -38,12 +40,16 @@ class FrenchEmailRule(Rule):
             return False
 
         email_wording = results.group("email")
-        if results.group("adresse") is None:
+        prefix_wording = results.group("prefix")
+        if prefix_wording is None or not self.is_unauthorized_prefix(prefix_wording):
             self.reason = "e-mail"
             return email_wording.startswith("mail")
         else:
-            self.reason = "adresse mail"
+            self.reason = f"{prefix_wording} mail"
             return email_wording.startswith("e")
 
+    def is_unauthorized_prefix(self, prefix_wording):
+        return any(prefix_wording.__contains__(authorized_word) for authorized_word in self.authorized_words)
+
     def get_explanation(self, string_value):
-        return f"in french only '{self.reason}' is authorized\nFound in '{string_value}'\n"
+        return f"in french only '{self.reason}' is authorized"
