@@ -103,6 +103,8 @@ def fix_loco_header(target_file):
 
 
 def validate_strings():
+    error_count = 0
+
     for value_folder in value_folders:
         current_file = f'{project_path}/{value_folder}/strings.xml'
         tree = ET.parse(current_file)
@@ -116,22 +118,34 @@ def validate_strings():
             value = element.text
 
             if tag == "string":
-                validate_string(language, name, value)
+                error_count += validate_string(language, name, value)
             elif tag == "plurals":
-                validate_plural(element, language, name)
+                error_count += validate_plural(element, language, name)
+
+    return error_count
 
 
 def validate_string(language, name, value):
+    error_count = 0
+
     for rule in rules:
-        rule.check(value, language, name)
+        if rule.check(value, language, name):
+            error_count += 1
 
     for language_rule in language_rules[language]:
-        language_rule.check(value, language, name)
+        if language_rule.check(value, language, name):
+            error_count += 1
+
+    return error_count
 
 
 def validate_plural(plural, language, name):
+    error_count = 0
+
     for element in plural:
         plural_name = f"{name}-{element.get('quantity')}"
         plural_value = element.text
 
-        validate_string(language, plural_name, plural_value)
+        error_count += validate_string(language, plural_name, plural_value)
+
+    return error_count
