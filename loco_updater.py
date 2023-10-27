@@ -6,7 +6,7 @@ import zipfile
 import xml.etree.ElementTree as ET
 
 import config as config
-from loco_validation_rules import ExistenceRule
+from loco_validation_rules import ExistenceRule, FrenchEmailRule
 
 cwd = "/tmp/ink_archive"
 archive_name = "downloaded.zip"
@@ -18,6 +18,14 @@ project_path = project_root + "/src/main/res"
 forbidden_sequences = ["'", "...", "ẞ"]
 forbidden_rules = [ExistenceRule(sequence) for sequence in forbidden_sequences]
 rules = [*forbidden_rules]
+
+language_rules = {
+    "en": [],
+    "fr": [FrenchEmailRule()],
+    "de": [],
+    "it": [],
+    "es": []
+}
 
 
 def update_loco():
@@ -112,8 +120,12 @@ def validate_item(language, tag, name, value):
 
 def validate_string(language, name, value):
     for rule in rules:
-        if rule.check(value):
+        if rule.matches(value):
             rule.warn(language, name, value)
+
+    for language_rule in language_rules[language]:
+        if language_rule.matches(value):
+            language_rule.warn(language, name, value)
 
 
 def validate_plural(language, name, value):
