@@ -108,14 +108,14 @@ def validate_strings():
         language = "en" if len(parts) < 2 else parts[-1]
 
         for element in tree.getroot():
-            validate_item(language, element.tag, element.get("name"), element.text)
+            tag = element.tag
+            name = element.get("name")
+            value = element.text
 
-
-def validate_item(language, tag, name, value):
-    if tag == "string":
-        validate_string(language, name, value)
-    elif tag == "plurals":
-        validate_plural(language, name, value)
+            if tag == "string":
+                validate_string(language, name, value)
+            elif tag == "plurals":
+                validate_plural(element, language, name)
 
 
 def validate_string(language, name, value):
@@ -126,5 +126,9 @@ def validate_string(language, name, value):
         language_rule.check(value, language, name)
 
 
-def validate_plural(language, name, value):
-    None
+def validate_plural(plural, language, name):
+    for element in plural:
+        plural_name = f"{name}-{element.get('quantity')}"
+        plural_value = element.text
+        
+        validate_string(language, plural_name, plural_value)
