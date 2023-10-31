@@ -89,7 +89,8 @@ def open_db(args):
 
     ls_files = "ls -lhS ./files"
     select_columns = "awk '{print $8, $5, $6, $7}'"
-    keep_db = "grep -x 'Mailbox-.*realm\s.*'"
+    db_pattern = "User-.*realm\s.*" if args.user else "Mailbox-.*realm\s.*"
+    keep_db = f"grep -x '{db_pattern}'"
 
     result = adb(f"shell run-as com.infomaniak.mail {ls_files} | {select_columns} | {keep_db}", device_id)
     files = remove_empty_items(result.stdout.split("\n"))
@@ -165,6 +166,7 @@ def define_commands(parser):
                                  help="apply to all connected devices")
     db_clear_parser.set_defaults(func=clear_mail_db)
     db_open_parser = db_subparser.add_parser("open", help="pulls and open a db file")
+    db_open_parser.add_argument("-u", "--user", action="store_true", default=False, help="open users databases")
     db_open_parser.set_defaults(func=open_db)
 
     # Show layout bounds
