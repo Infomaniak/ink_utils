@@ -89,8 +89,7 @@ def open_db(args):
 
     ls_files = "ls -lhS ./files"
     select_columns = "awk '{print $8, $5, $6, $7}'"
-    db_pattern = "User-.*realm\s.*" if args.user else "Mailbox-.*realm\s.*"
-    keep_db = f"grep -x '{db_pattern}'"
+    keep_db = f"grep -x '{get_db_pattern(args)}'"
 
     result = adb(f"shell run-as com.infomaniak.mail {ls_files} | {select_columns} | {keep_db}", device_id)
     files = remove_empty_items(result.stdout.split("\n"))
@@ -105,6 +104,15 @@ def open_db(args):
     pull_local_file(f"./files/{filename}", f"{working_directory}/{filename}", device_id)
 
     subprocess.Popen(("open", working_directory + filename), cwd=None)
+
+
+def get_db_pattern(args):
+    if args.user:
+        return "User-.*realm\s.*"
+    elif args.mailbox_info:
+        return "MailboxInfo.realm\s.*"
+    else:
+        return "Mailbox-.*realm\s.*"
 
 
 def pull_local_dir(src_path, dest_path, device_id):
@@ -167,6 +175,7 @@ def define_commands(parser):
     db_clear_parser.set_defaults(func=clear_mail_db)
     db_open_parser = db_subparser.add_parser("open", help="pulls and open a db file")
     db_open_parser.add_argument("-u", "--user", action="store_true", default=False, help="open users databases")
+    db_open_parser.add_argument("-mi", "--mailbox-info", action="store_true", default=False, help="open mailbox info databases")
     db_open_parser.set_defaults(func=open_db)
 
     # Show layout bounds
