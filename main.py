@@ -6,25 +6,39 @@ import os
 import pathlib
 import shutil
 import subprocess
-import sys
 
-from adb import adb, select_device, get_all_devices, close_app, open_app
-from utils import remove_empty_items, select_in_list, accept_substitution
 import eml_writer as ew
 import loco_updater as lu
 import login as lg
+from adb import adb, select_device, get_all_devices, close_app, open_app
+from utils import remove_empty_items, select_in_list, accept_substitution
 
 
 def clear_mail_db(args):
-    if args.all:
+    if not (args.mailbox or args.mailbox_info or args.user or args.coil or args.network or args.everything):
+        print("No target specified. Fallback on removing mailboxes")
+        args.mailbox = True
+
+    if args.all_devices:
         device_ids = get_all_devices()
     else:
         device_ids = [select_device()]
 
     for device_id in device_ids:
-        adb("exec-out run-as com.infomaniak.mail find ./files -name 'Mailbox-*-*.realm*' -exec rm -r {} \\;", device_id)
-        adb("exec-out run-as com.infomaniak.mail find ./cache -name '*_cache' -exec rm -r {} \\;", device_id)
-        adb("exec-out run-as com.infomaniak.mail find ./files -name 'network-response-body-*' -exec rm {} \\;", device_id)
+        if args.mailbox or args.everything:
+            adb("exec-out run-as com.infomaniak.mail find ./files -name 'Mailbox-*-*.realm*' -exec rm -r {} \\;", device_id)
+
+        if args.mailbox_info or args.everything:
+            adb("exec-out run-as com.infomaniak.mail find ./files -name 'MailboxInfo.realm*' -exec rm -r {} \\;", device_id)
+
+        if args.user or args.everything:
+            adb("exec-out run-as com.infomaniak.mail find ./files -name 'User-*.realm*' -exec rm -r {} \\;", device_id)
+
+        if args.coil or args.everything:
+            adb("exec-out run-as com.infomaniak.mail find ./cache -name '*_cache' -exec rm -r {} \\;", device_id)
+
+        if args.network or args.everything:
+            adb("exec-out run-as com.infomaniak.mail find ./files -name 'network-response-body-*' -exec rm {} \\;", device_id)
 
         if args.restart:
             close_app(device_id)
@@ -170,8 +184,20 @@ def define_commands(parser):
                                                          "cache but keeps the account logged in using adb")
     db_clear_parser.add_argument("-r", "--restart", action="store_true", default=False,
                                  help="also restart the app")
-    db_clear_parser.add_argument("-a", "--all", action="store_true", default=False,
+    db_clear_parser.add_argument("-ad", "--all-devices", action="store_true", default=False,
                                  help="apply to all connected devices")
+    db_clear_parser.add_argument("-m", "--mailbox", action="store_true", default=False,
+                                 help="removes mailboxes databases")
+    db_clear_parser.add_argument("-mi", "--mailbox-info", action="store_true", default=False,
+                                 help="removes mailbox info databases")
+    db_clear_parser.add_argument("-u", "--user", action="store_true", default=False,
+                                 help="removes user info databases")
+    db_clear_parser.add_argument("-c", "--coil", action="store_true", default=False,
+                                 help="removes coil caches")
+    db_clear_parser.add_argument("-n", "--network", action="store_true", default=False,
+                                 help="removes network caches")
+    db_clear_parser.add_argument("-e", "--everything", action="store_true", default=False,
+                                 help="remove all of the possible files")
     db_clear_parser.set_defaults(func=clear_mail_db)
     db_open_parser = db_subparser.add_parser("open", help="pulls and open a db file")
     db_open_parser.add_argument("-u", "--user", action="store_true", default=False, help="open users databases")
