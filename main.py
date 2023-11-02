@@ -188,7 +188,7 @@ def define_commands(parser):
                                  help="apply to all connected devices")
     db_clear_parser.add_argument("-m", "--mailbox", action="store_true", default=False,
                                  help="removes mailbox content databases")
-    db_clear_parser.add_argument("-mi", "--mailbox-info", action="store_true", default=False,
+    db_clear_parser.add_argument("-mi", "-i", "--mailbox-info", action="store_true", default=False,
                                  help="removes mailbox info databases")
     db_clear_parser.add_argument("-u", "--user", action="store_true", default=False,
                                  help="removes user info databases")
@@ -201,7 +201,8 @@ def define_commands(parser):
     db_clear_parser.set_defaults(func=clear_mail_db)
     db_open_parser = db_subparser.add_parser("open", help="pulls and open a db file")
     db_open_parser.add_argument("-u", "--user", action="store_true", default=False, help="open users databases")
-    db_open_parser.add_argument("-mi", "--mailbox-info", action="store_true", default=False, help="open mailbox info databases")
+    db_open_parser.add_argument("-mi", "-i", "--mailbox-info", action="store_true", default=False,
+                                help="open mailbox info databases")
     db_open_parser.set_defaults(func=open_db)
 
     # Show layout bounds
