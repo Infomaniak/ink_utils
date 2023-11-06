@@ -1,9 +1,10 @@
 import os
 import shutil
 import subprocess
-import requests
-import zipfile
 import xml.etree.ElementTree as ET
+import zipfile
+
+import requests
 
 import config as config
 from loco_validation_rules import ExistenceRule, FrenchEmailRule
@@ -20,13 +21,18 @@ forbidden_rules = [ExistenceRule(sequence) for sequence in forbidden_sequences]
 rules = [*forbidden_rules]
 
 language_rules = {
-    "en": [ExistenceRule("e-mail")],
+    "en": [ExistenceRule("e-mail", "Remove the hyphen")],
     "fr": [FrenchEmailRule()],
     "de": [
         ExistenceRule("ẞ"),
-        ExistenceRule("gespräch"),
+        ExistenceRule("gespräch", "Use 'Unterhaltung' instead"),
     ],
-    "it": [],
+    "it": [
+        ExistenceRule("oscuro", "In the context of a dark and light theme, use 'scuro'"),
+        ExistenceRule("claro", "In the context of a dark and light theme, use 'chiaro'"),
+        ExistenceRule("luce", "In the context of a dark and light theme, use 'chiaro'"),
+        ExistenceRule("thema", "In the context of a dark and light theme, use 'tema'"),
+    ],
     "es": []
 }
 

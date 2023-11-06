@@ -24,14 +24,19 @@ def get_string_id_header(language, string_id):
 
 
 class ExistenceRule(Rule):
-    def __init__(self, sequence):
+    def __init__(self, sequence, custom_explanation=None):
         self.sequence = sequence.lower()
+        self.custom_explanation = custom_explanation
 
     def is_matching(self, input_string):
         return input_string.lower().__contains__(self.sequence)
 
     def get_explanation(self, string_value):
-        return f"found forbidden sequence [{self.sequence}]"
+        if self.custom_explanation is None:
+            explanation = f"found forbidden sequence [{self.sequence}]"
+        else:
+            explanation = f"[{self.sequence}] detected. {self.custom_explanation}"
+        return explanation
 
 
 class FrenchEmailRule(Rule):
