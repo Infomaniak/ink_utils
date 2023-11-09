@@ -183,6 +183,15 @@ def extract_apk(args):
 
     selected_package = select_in_list("Choose package to extract", packages)
 
+    apk_paths_list = f"shell 'pm path {selected_package}'"
+    paths = adb(apk_paths_list, device_id).stdout.strip().splitlines()
+    if len(paths) != 1:
+        print("Bundled APK encountered. Cannot proceed\n")
+        print("Found:")
+        for path in paths:
+            print(path)
+        return
+
     download_apk_command = f"shell 'cat `pm path {selected_package} | cut -d':' -f2`' > {selected_package}.apk"
     adb(download_apk_command, device_id)
 
