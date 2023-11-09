@@ -169,6 +169,26 @@ def set_dark_mode(yes_or_no, device_id):
     adb(f'shell "cmd uimode night {yes_or_no}"', device_id)
 
 
+def extract_apk(args):
+    optional_grep = "" if args.keyword is None else f" | grep {args.keyword}"
+    find_packages_command = f"shell pm list packages -f{optional_grep}"
+
+    device_id = select_device()
+    raw_output = adb(find_packages_command, device_id).stdout.strip().splitlines()
+
+    packages = []
+    for line in raw_output:
+        if line.__contains__("/base.apk="):
+            packages.append(line.split("/base.apk=")[-1])
+
+    selected_package = select_in_list("Choose package to extract", packages)
+
+    download_apk_command = f"shell 'cat `pm path {selected_package} | cut -d':' -f2`' > {selected_package}.apk"
+    adb(download_apk_command, device_id)
+
+    print("Extraction finished")
+
+
 def catch_empty_calls(parser):
     return lambda _: parser.print_usage()
 
@@ -255,6 +275,11 @@ def define_commands(parser):
     light_parser.set_defaults(func=force_light_mode)
     toggle_parser = color_subparser.add_parser("toggle", help="toggles the current dark mode")
     toggle_parser.set_defaults(func=toggle_dark_light_mode)
+
+    # Apk extraction
+    apk_extraction_parser = subparsers.add_parser("apk", help="extract an installed apk")
+    apk_extraction_parser.add_argument("keyword", nargs="?", help="only propose package names that contains this given string")
+    apk_extraction_parser.set_defaults(func=extract_apk)
 
 
 if __name__ == '__main__':
