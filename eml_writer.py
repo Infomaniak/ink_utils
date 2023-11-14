@@ -25,10 +25,7 @@ def is_empty(string):
 
 
 def save_eml_to_file(eml, subject):
-    if is_empty(subject):
-        filename = default_filename + '.eml'
-    else:
-        filename = subject + '.eml'
+    filename = f'{default_filename}.eml' if is_empty(subject) else f'{subject}.eml'
 
     cwd = os.getcwd()
     outfile_name = os.path.join(cwd, filename)
