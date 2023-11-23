@@ -18,7 +18,7 @@ project_path = project_root + "/src/main/res"
 
 forbidden_sequences = ["'", "..."]
 forbidden_rules = [ExistenceRule(sequence) for sequence in forbidden_sequences]
-rules = [*forbidden_rules]
+rules = [*forbidden_rules, ExistenceRule(r" \n", "No space before a new line")]
 
 language_rules = {
     "en": [ExistenceRule("e-mail", "Remove the hyphen")],
