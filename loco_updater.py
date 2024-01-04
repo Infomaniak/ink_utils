@@ -7,7 +7,7 @@ import zipfile
 import requests
 
 import config as config
-from loco_validation_rules import ExistenceRule, FrenchEmailRule
+import loco_validator.validator as loco_validator
 
 cwd = "/tmp/ink_archive"
 archive_name = "downloaded.zip"
@@ -15,26 +15,6 @@ value_folders = ['values', 'values-de', 'values-es', 'values-fr', 'values-it']
 
 project_root = config.get('loco', 'project_root')
 project_path = project_root + "/src/main/res"
-
-forbidden_sequences = ["'", "..."]
-forbidden_rules = [ExistenceRule(sequence) for sequence in forbidden_sequences]
-rules = [*forbidden_rules, ExistenceRule(r" \n", "No space before a new line")]
-
-language_rules = {
-    "en": [ExistenceRule("e-mail", "Remove the hyphen")],
-    "fr": [FrenchEmailRule()],
-    "de": [
-        ExistenceRule("ẞ"),
-        ExistenceRule("gespräch", "Use 'Unterhaltung' instead"),
-    ],
-    "it": [
-        ExistenceRule("oscuro", "In the context of a dark and light theme, use 'scuro'"),
-        ExistenceRule("claro", "In the context of a dark and light theme, use 'chiaro'"),
-        ExistenceRule("luce", "In the context of a dark and light theme, use 'chiaro'"),
-        ExistenceRule("thema", "In the context of a dark and light theme, use 'tema'"),
-    ],
-    "es": []
-}
 
 
 def update_loco():
@@ -124,23 +104,9 @@ def validate_strings():
             value = element.text
 
             if tag == "string":
-                error_count += validate_string(language, name, value)
+                error_count += loco_validator.validate_string(language, name, value)
             elif tag == "plurals":
                 error_count += validate_plural(element, language, name)
-
-    return error_count
-
-
-def validate_string(language, name, value):
-    error_count = 0
-
-    for rule in rules:
-        if rule.check(value, language, name):
-            error_count += 1
-
-    for language_rule in language_rules[language]:
-        if language_rule.check(value, language, name):
-            error_count += 1
 
     return error_count
 
@@ -152,6 +118,6 @@ def validate_plural(plural, language, name):
         plural_name = f"{name}-{element.get('quantity')}"
         plural_value = element.text
 
-        error_count += validate_string(language, plural_name, plural_value)
+        error_count += loco_validator.validate_string(language, plural_name, plural_value)
 
     return error_count
