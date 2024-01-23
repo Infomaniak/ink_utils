@@ -5,22 +5,24 @@ from datetime import datetime, timedelta
 
 CACHE_FILE = "updater_cache"
 
+ink_folder = os.path.abspath(os.path.dirname(__file__))
 
-def run_cmd(cmd):
-    out = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True, universal_newlines=True)
+
+def run_git_local_cmd(cmd):
+    out = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True, universal_newlines=True, cwd=ink_folder)
     return out.stdout
 
 
 def does_current_branch_target_main():
-    return run_cmd("git rev-parse --abbrev-ref HEAD@{upstream}").startswith("origin/main")
+    return run_git_local_cmd("git rev-parse --abbrev-ref HEAD@{upstream}").startswith("origin/main")
 
 
 def get_current_branch_hash():
-    return run_cmd("git rev-parse HEAD").strip()
+    return run_git_local_cmd("git rev-parse HEAD").strip()
 
 
 def get_remote_main_hash():
-    remote_hash = run_cmd("git fetch && git rev-parse origin/main").strip()
+    remote_hash = run_git_local_cmd("git fetch && git rev-parse origin/main").strip()
     cache_remote_hash(remote_hash)
     return remote_hash
 
@@ -64,7 +66,7 @@ def check_for_updates():
         current_hash = get_current_branch_hash()
 
         if current_hash != latest_hash:
-            if random.randint(0, 31) == 0:
+            if random.randint(0, 19) == 0:
                 rainbow_print("A new version of Ink is available!\n")
             else:
                 print(color("A new version of Ink is available!\n", Colors.blue))
