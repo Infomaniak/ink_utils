@@ -12,6 +12,7 @@ import loco_updater as lu
 import login as lg
 from adb import adb, select_device, get_all_devices, close_app, open_app
 from utils import remove_empty_items, select_in_list, accept_substitution
+from updater import check_for_updates
 
 
 def clear_mail_db(args):
@@ -292,6 +293,8 @@ def define_commands(parser):
 
 
 if __name__ == '__main__':
+    check_for_updates()
+
     parser = argparse.ArgumentParser()  # (description="Arguments for kmail")
     parser.set_defaults(func=catch_empty_calls(parser))
 
