@@ -11,8 +11,8 @@ import eml_writer as ew
 import loco_updater as lu
 import login as lg
 from adb import adb, select_device, get_all_devices, close_app, open_app
+from updater import check_for_updates, rm_cache as update_rm_cache
 from utils import remove_empty_items, select_in_list, accept_substitution
-from updater import check_for_updates
 
 
 def clear_mail_db(args):
@@ -199,6 +199,10 @@ def extract_apk(args):
     print("Extraction finished")
 
 
+def rm_cache(args):
+    update_rm_cache()
+
+
 def catch_empty_calls(parser):
     return lambda _: parser.print_usage()
 
@@ -278,7 +282,7 @@ def define_commands(parser):
     # Dark mode
     dark_mode_parser = subparsers.add_parser("color", help="changes dark and light mode")
     dark_mode_parser.set_defaults(func=catch_empty_calls(dark_mode_parser))
-    color_subparser = dark_mode_parser.add_subparsers(help="db-sub-command help")
+    color_subparser = dark_mode_parser.add_subparsers(help="dark mode help")
     dark_parser = color_subparser.add_parser("dark", help="sets dark mode")
     dark_parser.set_defaults(func=force_dark_mode)
     light_parser = color_subparser.add_parser("light", help="sets light mode")
@@ -290,6 +294,13 @@ def define_commands(parser):
     apk_extraction_parser = subparsers.add_parser("apk", help="extract an installed apk")
     apk_extraction_parser.add_argument("keyword", nargs="?", help="only propose package names that contains this given string")
     apk_extraction_parser.set_defaults(func=extract_apk)
+
+    # Cache management
+    cache_parser = subparsers.add_parser("cache", help="manage the cache of ink")
+    cache_parser.set_defaults(func=catch_empty_calls(cache_parser))
+    color_subparser = cache_parser.add_subparsers(help="cache help")
+    dark_parser = color_subparser.add_parser("rm", help="resets the cache")
+    dark_parser.set_defaults(func=rm_cache)
 
 
 if __name__ == '__main__':

@@ -70,6 +70,10 @@ def check_for_updates():
                 print(color("A new version of Ink is available!\n", Colors.blue))
 
 
+def rm_cache():
+    os.remove(CACHE_FILE)
+
+
 def rainbow_print(string):
     colors = [
         Colors.red,
