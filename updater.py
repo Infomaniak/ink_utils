@@ -1,7 +1,7 @@
 import os.path
 import random
 import subprocess
-from datetime import datetime, timedelta
+from datetime import datetime
 
 CACHE_FILE = "updater_cache"
 
@@ -39,9 +39,8 @@ def is_cache_outdated():
 
     date = lines[0].strip()
     last_check = datetime.fromisoformat(date)
-    validity_limit = last_check + timedelta(days=1)
 
-    return datetime.now() > validity_limit
+    return datetime.now().date() > last_check.date()
 
 
 def read_cached_remote_hash():
@@ -66,7 +65,7 @@ def check_for_updates():
         current_hash = get_current_branch_hash()
 
         if current_hash != latest_hash:
-            if random.randint(0, 19) == 0:
+            if random.randint(0, 15) == 0:
                 rainbow_print("A new version of Ink is available!\n")
             else:
                 print(color("A new version of Ink is available!\n", Colors.blue))
