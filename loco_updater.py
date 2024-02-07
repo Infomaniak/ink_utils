@@ -31,7 +31,7 @@ def update_loco():
         zip_ref.extractall(cwd)
 
     os.chdir(cwd)
-    files = os.listdir('.')
+    files = [file for file in os.listdir('.') if file != archive_name]
 
     os.chdir(project_root)
 
