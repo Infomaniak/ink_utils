@@ -10,11 +10,11 @@ login_device_id = None
 
 
 def login(skip_view_pager, from_web_view):
-    login = config.get("login", "id", None)
+    login = config.get_global("login", "id", raise_error=False)
     if login is None:
         login = input("Email:")
 
-    pwd = config.get("login", "pwd", None)
+    pwd = config.get_global("login", "pwd", raise_error=False)
     if pwd is None:
         pwd = getpass.getpass()
 

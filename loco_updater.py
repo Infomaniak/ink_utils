@@ -13,12 +13,12 @@ cwd = "/tmp/ink_archive"
 archive_name = "downloaded.zip"
 value_folders = ['values', 'values-de', 'values-es', 'values-fr', 'values-it']
 
-project_root = config.get('loco', 'project_root')
+project_root = config.get_project('loco', 'project_root')
 project_path = project_root + "/src/main/res"
 
 
 def update_loco():
-    loco_key = config.get('loco', 'loco_key')
+    loco_key = config.get_project('loco', 'loco_key')
     zip_url = f"https://localise.biz/api/export/archive/xml.zip?format=android&filter=android&fallback=en&order=id&key={loco_key}"
 
     archive_path = download_zip(zip_url)
