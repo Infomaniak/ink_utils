@@ -10,6 +10,7 @@ import subprocess
 import eml_writer as ew
 import loco_updater as lu
 import login as lg
+import projects
 from adb import adb, select_device, get_all_devices, close_app, open_app
 from updater import check_for_updates, rm_cache as update_rm_cache
 from utils import remove_empty_items, select_in_list, accept_substitution
@@ -203,6 +204,13 @@ def rm_cache(args):
     update_rm_cache()
 
 
+def manage_projects(args):
+    if args.selected_project is not None:
+        projects.select_project(args.selected_project)
+    else:
+        projects.list_projects()
+
+
 def catch_empty_calls(parser):
     return lambda _: parser.print_usage()
 
@@ -301,6 +309,12 @@ def define_commands(parser):
     color_subparser = cache_parser.add_subparsers(help="cache help")
     dark_parser = color_subparser.add_parser("rm", help="resets the cache")
     dark_parser.set_defaults(func=rm_cache)
+
+    # Project management
+    project_parser = subparsers.add_parser("project",
+                                           help="manages projects defined in settings. If no arg is supplied, lists the projects")
+    project_parser.add_argument("selected_project", nargs="?", help="the project to select for future uses")
+    project_parser.set_defaults(func=manage_projects)
 
 
 if __name__ == '__main__':
