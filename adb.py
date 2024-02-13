@@ -1,6 +1,6 @@
 import subprocess
-import inquirer
 
+import config
 from utils import remove_empty_items, select_in_list
 
 
@@ -26,9 +26,10 @@ def get_all_devices():
 
 
 def close_app(device_id):
-    adb("shell am force-stop com.infomaniak.mail", device_id)
+    package_name = config.get_project("package", "name")
+    adb(f"shell am force-stop {package_name}", device_id)
 
 
 def open_app(device_id):
-    adb("shell monkey -p com.infomaniak.mail -c android.intent.category.LAUNCHER 1", device_id,
-        stderr=subprocess.DEVNULL)
+    package_name = config.get_project("package", "name")
+    adb(f"shell monkey -p {package_name} -c android.intent.category.LAUNCHER 1", device_id, stderr=subprocess.DEVNULL)

@@ -2,11 +2,15 @@ mail:
     loco:
         project_root: /Users/.../android-mail/app
         loco_key: XXX
+    package:
+        name: com.infomaniak.mail
 
 drive:
     loco:
         project_root: /Users/.../android-kDrive/app
         loco_key: YYY
+    package:
+        name: com.infomaniak.drive
 
 global:
     login:

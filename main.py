@@ -97,7 +97,7 @@ def update_loco(args):
 
 
 def login(args):
-    lg.login(args.add, args.web)
+    lg.login(args.add, args.web, args.from_email)
 
 
 def open_db(args):
@@ -285,6 +285,8 @@ def define_commands(parser):
                               help="skip view pager four pages navigation when you add a new account to existing ones")
     login_parser.add_argument("-w", "--web", action="store_true", default=False,
                               help="start login inputs from the webview")
+    login_parser.add_argument("-e", "--from-email", action="store_true", default=False,
+                              help="start login inputs from when the email field is focused")
     login_parser.set_defaults(func=login)
 
     # Dark mode
