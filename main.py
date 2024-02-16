@@ -270,23 +270,8 @@ def define_commands(parser):
                                                          "cache but keeps the account logged in using adb")
     add_restart_app_arg(db_clear_parser)
     add_all_device_arg(db_clear_parser)
-    db_clear_parser.add_argument("-m", "--mailbox", action="store_true", default=False,
-                                 help="removes mailbox content databases")
-    db_clear_parser.add_argument("-mi", "-i", "--mailbox-info", action="store_true", default=False,
-                                 help="removes mailbox info databases")
-    db_clear_parser.add_argument("-u", "--user", action="store_true", default=False,
-                                 help="removes user info databases")
-    db_clear_parser.add_argument("-c", "--coil", action="store_true", default=False,
-                                 help="removes coil caches")
-    db_clear_parser.add_argument("-n", "--network", action="store_true", default=False,
-                                 help="removes network caches")
-    db_clear_parser.add_argument("-e", "--everything", action="store_true", default=False,
-                                 help="remove all of the possible files")
     db_clear_parser.set_defaults(func=db.clear_mail_db)
     db_open_parser = db_subparser.add_parser("open", help="pulls and open a db file")
-    db_open_parser.add_argument("-u", "--user", action="store_true", default=False, help="open users databases")
-    db_open_parser.add_argument("-mi", "-i", "--mailbox-info", action="store_true", default=False,
-                                help="open mailbox info databases")
     db_open_parser.set_defaults(func=db.open_db)
 
     # Show layout bounds

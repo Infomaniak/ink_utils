@@ -8,29 +8,14 @@ from utils import remove_empty_items, select_in_list
 
 
 def clear_mail_db(args):
-    if not (args.mailbox or args.mailbox_info or args.user or args.coil or args.network or args.everything):
-        print("No target specified. Fallback on removing mailboxes")
-        args.mailbox = True
+    default_pattern = get_glob_db_pattern()
 
     package_name = config.get_project("global", "package_name")
 
     for device_id in select_device_or_all(args):
         warn_if_current_project_app_is_not_focused(device_id)
 
-        if args.mailbox or args.everything:
-            adb(f"exec-out run-as {package_name} find ./files -name 'Mailbox-*-*.realm*' -exec rm -r {{}} \\;", device_id)
-
-        if args.mailbox_info or args.everything:
-            adb(f"exec-out run-as {package_name} find ./files -name 'MailboxInfo.realm*' -exec rm -r {{}} \\;", device_id)
-
-        if args.user or args.everything:
-            adb(f"exec-out run-as {package_name} find ./files -name 'User-*.realm*' -exec rm -r {{}} \\;", device_id)
-
-        if args.coil or args.everything:
-            adb(f"exec-out run-as {package_name} find ./cache -name '*_cache' -exec rm -r {{}} \\;", device_id)
-
-        if args.network or args.everything:
-            adb(f"exec-out run-as {package_name} find ./files -name 'network-response-body-*' -exec rm {{}} \\;", device_id)
+        adb(f"exec-out run-as {package_name} find ./files -name '{default_pattern}' -exec rm -r {{}} \\;", device_id)
 
         if args.restart:
             close_app(device_id)
@@ -42,7 +27,7 @@ def open_db(args):
 
     ls_files = "ls -lhS ./files"
     select_columns = "awk '{print $8, $5, $6, $7}'"
-    keep_db = f"grep -x '{get_db_pattern(args)}'"
+    keep_db = f"grep -x '{get_regex_db_pattern()}'"
 
     package_name = config.get_project("global", "package_name")
 
@@ -61,13 +46,12 @@ def open_db(args):
     subprocess.Popen(("open", working_directory + filename), cwd=None)
 
 
-def get_db_pattern(args):
-    if args.user:
-        return "User-.*realm\s.*"
-    elif args.mailbox_info:
-        return "MailboxInfo.realm\s.*"
-    else:
-        return "Mailbox-.*realm\s.*"
+def get_regex_db_pattern():
+    return ".*\.realm\s.*"
+
+
+def get_glob_db_pattern():
+    return "*.realm*"
 
 
 def pull_local_dir(src_path, dest_path, device_id):
