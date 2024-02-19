@@ -13,17 +13,7 @@ import projects
 from adb import adb, select_device
 from updater import check_for_updates, rm_cache as update_rm_cache
 from utils import select_in_list, accept_substitution
-
-
-def show_layout_bounds(args):
-    device_id = select_device()
-
-    result = adb("shell getprop debug.layout", device_id)
-    print("When getting current prop state we get: [" + result.stdout.strip() + "]")
-    new_layout_state = "false" if (result.stdout.strip() == "true") else "true"
-    print("Setting show layout bounds to " + new_layout_state)
-    adb("shell setprop debug.layout " + new_layout_state, device_id)
-    adb("shell service call activity 1599295570", device_id)
+from adb_prop import show_layout_bounds, show_layout_bars
 
 
 def generate_eml(args):
@@ -242,6 +232,10 @@ def define_commands(parser):
                                            help="manages projects defined in settings. If no arg is supplied, lists the projects")
     project_parser.add_argument("selected_project", nargs="?", help="the project to select for future uses")
     project_parser.set_defaults(func=manage_projects)
+
+    # Show gpu processing bars
+    bounds_parser = subparsers.add_parser("bars", help="toggles visual bars for the android device using adb")
+    bounds_parser.set_defaults(func=show_layout_bars)
 
 
 if __name__ == '__main__':
