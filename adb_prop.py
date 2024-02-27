@@ -1,11 +1,9 @@
 import random
 
-from adb import adb, select_device
+from adb import adb, select_device_or_all
 
 
-def set_prop(prop_name, value_on, value_off):
-    device_id = select_device()
-
+def _set_prop(prop_name, value_on, value_off, device_id):
     result = adb(f"shell getprop {prop_name}", device_id)
     # print("When getting current prop state we get: [" + result.stdout.strip() + "]")
     new_layout_state = value_off if (result.stdout.strip() == value_on) else value_on
@@ -14,14 +12,19 @@ def set_prop(prop_name, value_on, value_off):
     adb("shell service call activity 1599295570", device_id)
 
 
+def set_prop(args, prop_name, value_on, value_off):
+    for device_id in select_device_or_all(args):
+        _set_prop(prop_name, value_on, value_off, device_id)
+
+
 def show_layout_bounds(args):
-    set_prop("debug.layout", "true", "false")
+    set_prop(args, "debug.layout", "true", "false")
 
 
 def show_layout_bars(args):
     if random.randint(0, 4) == 0:
         spit_bars()
-    set_prop("debug.hwui.profile", "visual_bars", "false")
+    set_prop(args, "debug.hwui.profile", "visual_bars", "false")
 
 
 def spit_bars():

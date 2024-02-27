@@ -11,9 +11,9 @@ import loco_updater as lu
 import login as lg
 import projects
 from adb import adb, select_device
+from adb_prop import show_layout_bounds, show_layout_bars
 from updater import check_for_updates, rm_cache as update_rm_cache
 from utils import select_in_list, accept_substitution
-from adb_prop import show_layout_bounds, show_layout_bars
 
 
 def generate_eml(args):
@@ -130,6 +130,10 @@ def catch_empty_calls(parser):
     return lambda _: parser.print_usage()
 
 
+def add_all_device_arg(parser):
+    parser.add_argument("-ad", "--all-devices", action="store_true", default=False, help="apply to all connected devices")
+
+
 def define_commands(parser):
     subparsers = parser.add_subparsers(help='sub-command help')
 
@@ -141,8 +145,7 @@ def define_commands(parser):
                                                          "cache but keeps the account logged in using adb")
     db_clear_parser.add_argument("-r", "--restart", action="store_true", default=False,
                                  help="also restart the app")
-    db_clear_parser.add_argument("-ad", "--all-devices", action="store_true", default=False,
-                                 help="apply to all connected devices")
+    add_all_device_arg(db_clear_parser)
     db_clear_parser.add_argument("-m", "--mailbox", action="store_true", default=False,
                                  help="removes mailbox content databases")
     db_clear_parser.add_argument("-mi", "-i", "--mailbox-info", action="store_true", default=False,
@@ -164,6 +167,7 @@ def define_commands(parser):
 
     # Show layout bounds
     bounds_parser = subparsers.add_parser("bounds", help="toggles layout bounds for the android device using adb")
+    add_all_device_arg(bounds_parser)
     bounds_parser.set_defaults(func=show_layout_bounds)
 
     # Eml
@@ -235,6 +239,7 @@ def define_commands(parser):
 
     # Show gpu processing bars
     bounds_parser = subparsers.add_parser("bars", help="toggles visual bars for the android device using adb")
+    add_all_device_arg(bounds_parser)
     bounds_parser.set_defaults(func=show_layout_bars)
 
 

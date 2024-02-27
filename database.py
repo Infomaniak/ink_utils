@@ -3,7 +3,7 @@ import shutil
 import subprocess
 
 import config as config
-from adb import adb, select_device, get_all_devices, close_app, open_app
+from adb import adb, select_device, close_app, open_app, select_device_or_all
 from utils import remove_empty_items, select_in_list
 
 
@@ -12,14 +12,9 @@ def clear_mail_db(args):
         print("No target specified. Fallback on removing mailboxes")
         args.mailbox = True
 
-    if args.all_devices:
-        device_ids = get_all_devices()
-    else:
-        device_ids = [select_device()]
-
     package_name = config.get_project("package", "name")
 
-    for device_id in device_ids:
+    for device_id in select_device_or_all(args):
         if args.mailbox or args.everything:
             adb(f"exec-out run-as {package_name} find ./files -name 'Mailbox-*-*.realm*' -exec rm -r {{}} \\;", device_id)
 

@@ -18,6 +18,14 @@ def select_device():
     return select_in_list("What device would you like to use?", devices).split("\t")[0]
 
 
+def select_device_or_all(args):
+    if args.all_devices:
+        device_ids = get_all_devices()
+    else:
+        device_ids = [select_device()]
+    return device_ids
+
+
 def get_all_devices():
     out = subprocess.run("adb devices", stdout=subprocess.PIPE, shell=True, universal_newlines=True)
     devices = remove_empty_items(out.stdout.split("\n")[1:])
