@@ -23,7 +23,7 @@ def update_loco():
 
     archive_path = download_zip(zip_url)
     if archive_path is None:
-        return
+        return False
 
     print("String resources downloaded successfully")
 
@@ -48,6 +48,8 @@ def update_loco():
 
     shutil.rmtree(cwd)
     print("Deleting temporary downloaded strings resources")
+
+    return True
 
 
 def download_zip(zip_url):

@@ -42,7 +42,9 @@ def copy_last_video(args):
 
 def update_loco(args):
     if not args.check:
-        lu.update_loco()
+        successfully_updated = lu.update_loco()
+        if not successfully_updated:
+            exit()
         print()
 
     print("Searching for errors in imported strings")
