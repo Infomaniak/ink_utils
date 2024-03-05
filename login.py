@@ -57,7 +57,7 @@ def input_combination(adb_arguments, custom_sleep_duration=sleep_duration):
 
 
 def not_running():
-    package_name = config.get_project("package", "name")
+    package_name = config.get_project("global", "package_name")
     result = adb(f"shell pidof {package_name}", login_device_id)
     pid = result.stdout
     return pid == ""

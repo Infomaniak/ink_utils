@@ -34,10 +34,10 @@ def get_all_devices():
 
 
 def close_app(device_id):
-    package_name = config.get_project("package", "name")
+    package_name = config.get_project("global", "package_name")
     adb(f"shell am force-stop {package_name}", device_id)
 
 
 def open_app(device_id):
-    package_name = config.get_project("package", "name")
+    package_name = config.get_project("global", "package_name")
     adb(f"shell monkey -p {package_name} -c android.intent.category.LAUNCHER 1", device_id, stderr=subprocess.DEVNULL)

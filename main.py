@@ -132,7 +132,7 @@ def manage_projects(args):
 
 def manually_install_apk(args):
     device_id = select_device()
-    project_path = config.get_project("loco", "project_root")  # Make it a global setting not a loco one
+    project_path = config.get_project("global", "project_root")
     apk_folder = f"{project_path}/build/intermediates/apk/standard/debug"
 
     files_paths = glob.glob(apk_folder + "/*")

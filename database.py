@@ -12,7 +12,7 @@ def clear_mail_db(args):
         print("No target specified. Fallback on removing mailboxes")
         args.mailbox = True
 
-    package_name = config.get_project("package", "name")
+    package_name = config.get_project("global", "package_name")
 
     for device_id in select_device_or_all(args):
         if args.mailbox or args.everything:
@@ -42,7 +42,7 @@ def open_db(args):
     select_columns = "awk '{print $8, $5, $6, $7}'"
     keep_db = f"grep -x '{get_db_pattern(args)}'"
 
-    package_name = config.get_project("package", "name")
+    package_name = config.get_project("global", "package_name")
 
     result = adb(f"shell run-as {package_name} {ls_files} | {select_columns} | {keep_db}", device_id)
     files = remove_empty_items(result.stdout.split("\n"))
@@ -69,7 +69,7 @@ def get_db_pattern(args):
 
 
 def pull_local_dir(src_path, dest_path, device_id):
-    package_name = config.get_project("package", "name")
+    package_name = config.get_project("global", "package_name")
 
     result = adb(f"exec-out run-as {package_name} ls -1 {src_path}", device_id)
     os.makedirs(dest_path, exist_ok=True)
