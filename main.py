@@ -2,9 +2,11 @@
 # PYTHON_ARGCOMPLETE_OK
 
 import argparse
+import glob
 import pathlib
 import subprocess
 
+import config
 import database as db
 import eml_writer as ew
 import loco_updater as lu
@@ -128,6 +130,19 @@ def manage_projects(args):
         projects.list_projects()
 
 
+def manually_install_apk(args):
+    device_id = select_device()
+    project_path = config.get_project("loco", "project_root")  # Make it a global setting not a loco one
+    apk_folder = f"{project_path}/build/intermediates/apk/standard/debug"
+
+    files_paths = glob.glob(apk_folder + "/*")
+    for file_path in files_paths:
+        if file_path.endswith(".apk"):
+            print(f"installing {file_path}")
+            adb(f'install -t "{file_path}"', device_id)
+            break
+
+
 def catch_empty_calls(parser):
     return lambda _: parser.print_usage()
 
@@ -238,6 +253,9 @@ def define_commands(parser):
                                            help="manages projects defined in settings. If no arg is supplied, lists the projects")
     project_parser.add_argument("selected_project", nargs="?", help="the project to select for future uses")
     project_parser.set_defaults(func=manage_projects)
+    project_subparser = project_parser.add_subparsers()
+    manual_install_parser = project_subparser.add_parser("install", help="manually installs the built debug apk")
+    manual_install_parser.set_defaults(func=manually_install_apk)
 
     # Show gpu processing bars
     bounds_parser = subparsers.add_parser("bars", help="toggles visual bars for the android device using adb")
