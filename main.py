@@ -253,8 +253,9 @@ def define_commands(parser):
                                            help="manages projects defined in settings. If no arg is supplied, lists the projects")
     project_parser.add_argument("selected_project", nargs="?", help="the project to select for future uses")
     project_parser.set_defaults(func=manage_projects)
-    project_subparser = project_parser.add_subparsers()
-    manual_install_parser = project_subparser.add_parser("install", help="manually installs the built debug apk")
+
+    # Manual apk install
+    manual_install_parser = subparsers.add_parser("forceinstall", help="manually installs the built debug apk")
     manual_install_parser.set_defaults(func=manually_install_apk)
 
     # Show gpu processing bars
