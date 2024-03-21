@@ -12,7 +12,7 @@ import eml_writer as ew
 import loco_updater as lu
 import login as lg
 import projects
-from adb import adb, select_device
+from adb import adb, select_device, close_app, open_app
 from adb_prop import show_layout_bounds, show_layout_bars
 from updater import check_for_updates, rm_cache as update_rm_cache
 from utils import select_in_list, accept_substitution
@@ -138,8 +138,21 @@ def manually_install_apk(args):
     files_paths = glob.glob(apk_folder + "/*")
     for file_path in files_paths:
         if file_path.endswith(".apk"):
-            print(f"installing {file_path}")
-            adb(f'install -t "{file_path}"', device_id)
+            print(f"installing {file_path}\n")
+            result = adb(f'install -t "{file_path}"', device_id)
+
+            output_lines = result.stdout.strip().splitlines()
+            is_success = output_lines[-1].strip() == "Success"
+            if is_success:
+                print("Successfully installed")
+
+            if args.restart:
+                if is_success:
+                    close_app(device_id)
+                    open_app(device_id)
+                else:
+                    print("\nCould not open the apk because the installation failed")
+
             break
 
 
@@ -151,6 +164,10 @@ def add_all_device_arg(parser):
     parser.add_argument("-ad", "--all-devices", action="store_true", default=False, help="apply to all connected devices")
 
 
+def add_restart_app_arg(parser):
+    parser.add_argument("-r", "--restart", action="store_true", default=False, help="also restart the app")
+
+
 def define_commands(parser):
     subparsers = parser.add_subparsers(help='sub-command help')
 
@@ -160,8 +177,7 @@ def define_commands(parser):
     db_subparser = db_parser.add_subparsers(help="db-sub-command help")
     db_clear_parser = db_subparser.add_parser("rm", help="deletes all of the databases containg mails or attachment "
                                                          "cache but keeps the account logged in using adb")
-    db_clear_parser.add_argument("-r", "--restart", action="store_true", default=False,
-                                 help="also restart the app")
+    add_restart_app_arg(db_clear_parser)
     add_all_device_arg(db_clear_parser)
     db_clear_parser.add_argument("-m", "--mailbox", action="store_true", default=False,
                                  help="removes mailbox content databases")
@@ -256,6 +272,7 @@ def define_commands(parser):
 
     # Manual apk install
     manual_install_parser = subparsers.add_parser("forceinstall", help="manually installs the built debug apk")
+    add_restart_app_arg(manual_install_parser)
     manual_install_parser.set_defaults(func=manually_install_apk)
 
     # Show gpu processing bars
