@@ -19,11 +19,7 @@ def select_device():
 
 
 def select_device_or_all(args):
-    if args.all_devices:
-        device_ids = get_all_devices()
-    else:
-        device_ids = [select_device()]
-    return device_ids
+    return get_all_devices() if args.all_devices else [select_device()]
 
 
 def get_all_devices():

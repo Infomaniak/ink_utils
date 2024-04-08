@@ -57,11 +57,7 @@ def cache_remote_hash(remote_hash):
 
 def check_for_updates():
     if does_current_branch_target_main():
-        if is_cache_outdated():
-            latest_hash = get_remote_main_hash()
-        else:
-            latest_hash = read_cached_remote_hash()
-
+        latest_hash = get_remote_main_hash() if is_cache_outdated() else read_cached_remote_hash()
         current_hash = get_current_branch_hash()
 
         if current_hash != latest_hash:

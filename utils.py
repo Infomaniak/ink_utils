@@ -6,10 +6,7 @@ def remove_empty_items(array):
 
 
 def select_in_list(message, choices):
-    if len(choices) == 1:
-        return choices[0]
-    return inquirer.prompt([inquirer.List('choice', message=message, choices=choices)])['choice']
-
+    return choices[0] if len(choices) == 1 else inquirer.prompt([inquirer.List('choice', message=message, choices=choices)])['choice']
 
 def accept_substitution(input):
     if input is not None and input.startswith("/dev/fd"):

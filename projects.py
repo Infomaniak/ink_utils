@@ -4,11 +4,7 @@ import config
 def list_projects():
     projects = config.list_projects()
     for project in projects:
-        if project == config.project_key:
-            prefix = " * "
-        else:
-            prefix = "   "
-
+        prefix = " * " if project == config.project_key else "   "
         print(f"{prefix} {project}")
 
 
