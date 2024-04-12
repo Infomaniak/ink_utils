@@ -15,7 +15,7 @@ import projects
 from adb import adb, select_device, close_app, open_app
 from adb_prop import show_layout_bounds, show_layout_bars
 from updater import check_for_updates, rm_cache as update_rm_cache
-from utils import select_in_list, accept_substitution
+from utils import select_in_list, accept_substitution, ink_folder
 
 
 def generate_eml(args):
@@ -156,6 +156,22 @@ def manually_install_apk(args):
             break
 
 
+def update_ps1(args):
+    ps1 = subprocess.check_output(['zsh', '-i', '-c', 'echo $PS1']).decode("utf-8")
+    parts = ps1.split("\n")
+
+    get_current_project_code = f"$(cat {ink_folder}/.current_project)"
+
+    parts[0] += f"{ps1_bold('ink:(', 'yellow')}{ps1_bold(get_current_project_code, 'red')}{ps1_bold(')', 'yellow')}"
+
+    new_ps1 = "\n".join(parts)
+    print(new_ps1)
+
+
+def ps1_bold(text, color):
+    return "%{$fg_bold[" + color + "]%}" + text + "%{$reset_color%}"
+
+
 def catch_empty_calls(parser):
     return lambda _: parser.print_usage()
 
@@ -279,6 +295,10 @@ def define_commands(parser):
     bounds_parser = subparsers.add_parser("bars", help="toggles visual bars for the android device using adb")
     add_all_device_arg(bounds_parser)
     bounds_parser.set_defaults(func=show_layout_bars)
+
+    # update PS1 to display current selected project
+    ps1_parser = subparsers.add_parser("ps1", help="update PS1 to display current selected project")
+    ps1_parser.set_defaults(func=update_ps1)
 
 
 if __name__ == '__main__':

@@ -3,9 +3,9 @@ import random
 import subprocess
 from datetime import datetime
 
-CACHE_FILE = "updater_cache"
+from utils import ink_folder
 
-ink_folder = os.path.abspath(os.path.dirname(__file__))
+CACHE_FILE = "updater_cache"
 
 
 def run_git_local_cmd(cmd):

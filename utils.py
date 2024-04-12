@@ -1,4 +1,8 @@
+import os
+
 import inquirer
+
+ink_folder = os.path.abspath(os.path.dirname(__file__))
 
 
 def remove_empty_items(array):
