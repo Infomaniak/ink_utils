@@ -5,7 +5,7 @@ from datetime import datetime
 
 from utils import ink_folder
 
-CACHE_FILE = "updater_cache"
+cache_file = ink_folder + "/updater_cache"
 
 
 def run_git_local_cmd(cmd):
@@ -28,10 +28,10 @@ def get_remote_main_hash():
 
 
 def is_cache_outdated():
-    if not os.path.isfile(CACHE_FILE):
+    if not os.path.isfile(cache_file):
         return True
 
-    with open(CACHE_FILE, "r") as fd:
+    with open(cache_file, "r") as fd:
         lines = fd.readlines()
 
     if len(lines) < 2:
@@ -44,14 +44,14 @@ def is_cache_outdated():
 
 
 def read_cached_remote_hash():
-    with open(CACHE_FILE, "r") as fd:
+    with open(cache_file, "r") as fd:
         lines = fd.readlines()
 
     return lines[1].strip()
 
 
 def cache_remote_hash(remote_hash):
-    with open(CACHE_FILE, "w+") as fd:
+    with open(cache_file, "w+") as fd:
         fd.write(datetime.now().isoformat() + "\n" + remote_hash)
 
 
@@ -72,7 +72,7 @@ def check_for_updates():
 
 
 def rm_cache():
-    os.remove(CACHE_FILE)
+    os.remove(cache_file)
 
 
 def rainbow_print(string):
