@@ -1,3 +1,4 @@
 settings.yml
 updater_cache
 .current_project
+.DS_Store
