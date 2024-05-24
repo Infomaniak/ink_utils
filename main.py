@@ -172,6 +172,31 @@ def ps1_bold(text, color):
     return "%{$fg_bold[" + color + "]%}" + text + "%{$reset_color%}"
 
 
+def rm_data(args):
+    device_id = select_device()
+    package_name = config.get_project("global", "package_name")
+
+    if args.cache:
+        adb(f'shell run-as {package_name} "rm -rf ./cache"', device_id)
+    else:
+        adb(f"shell pm clear {package_name}", device_id)
+
+    if args.restart:
+        open_app(device_id)
+
+
+def list_data(args):
+    device_id = select_device()
+    package_name = config.get_project("global", "package_name")
+
+    result = adb(f'shell run-as {package_name} "ls ./cache"', device_id, stderr=subprocess.DEVNULL)
+    if result.returncode == 1:
+        print("Empty cache")
+    else:
+        print("=== Cache files ===")
+        print(result.stdout)
+
+
 def catch_empty_calls(parser):
     return lambda _: parser.print_usage()
 
@@ -273,7 +298,7 @@ def define_commands(parser):
     apk_extraction_parser.add_argument("keyword", nargs="?", help="only propose package names that contains this given string")
     apk_extraction_parser.set_defaults(func=extract_apk)
 
-    # Cache management
+    # Ink's cache management
     cache_parser = subparsers.add_parser("cache", help="manage the cache of ink")
     cache_parser.set_defaults(func=catch_empty_calls(cache_parser))
     color_subparser = cache_parser.add_subparsers(help="cache help")
@@ -296,9 +321,23 @@ def define_commands(parser):
     add_all_device_arg(bounds_parser)
     bounds_parser.set_defaults(func=show_layout_bars)
 
-    # update PS1 to display current selected project
+    # Update PS1 to display current selected project
     ps1_parser = subparsers.add_parser("ps1", help="update PS1 to display current selected project")
     ps1_parser.set_defaults(func=update_ps1)
+
+    # Remove data of the app
+    data_parser = subparsers.add_parser("data", help="remove data or cache of the app")
+    data_parser.set_defaults(func=catch_empty_calls(data_parser))
+    data_subparser = data_parser.add_subparsers(help="data help")
+
+    rm_data_parser = data_subparser.add_parser("rm", help="removes data or cache of the selected project")
+    rm_data_parser.add_argument("-c", "--cache", action="store_true", default=False,
+                                help="only removes the cache")
+    add_restart_app_arg(rm_data_parser)
+    rm_data_parser.set_defaults(func=rm_data)
+
+    list_data_parser = data_subparser.add_parser("list", help="lists files inside the cache of the selected project")
+    list_data_parser.set_defaults(func=list_data)
 
 
 if __name__ == '__main__':
