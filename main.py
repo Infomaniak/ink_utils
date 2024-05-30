@@ -142,7 +142,7 @@ def manually_install_apk(args):
             result = adb(f'install -t "{file_path}"', device_id)
 
             output_lines = result.stdout.strip().splitlines()
-            is_success = output_lines[-1].strip() == "Success"
+            is_success = len(output_lines) > 0 and output_lines[-1].strip() == "Success"
             if is_success:
                 print("Successfully installed")
 
