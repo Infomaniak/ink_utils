@@ -71,9 +71,18 @@ def check_for_updates():
                 print(color("A new version of Ink is available!\n", Colors.blue))
 
 
+def update_git_project():
+    if does_current_branch_target_main():
+        run_git_local_cmd("git pull")
+    else:
+        print("Your current branch does not target main")
+
+
 def rm_cache():
     os.remove(cache_file)
 
+
+# Print utils
 
 def rainbow_print(string):
     colors = [

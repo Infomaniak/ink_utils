@@ -14,7 +14,7 @@ import login as lg
 import projects
 from adb import adb, select_device, close_app, open_app
 from adb_prop import show_layout_bounds, show_layout_bars
-from updater import check_for_updates, rm_cache as update_rm_cache
+from updater import check_for_updates, rm_cache as update_rm_cache, update_git_project
 from utils import select_in_list, accept_substitution, ink_folder
 
 
@@ -197,6 +197,10 @@ def list_data(args):
         print(result.stdout)
 
 
+def update_project(args):
+    update_git_project()
+
+
 def catch_empty_calls(parser):
     return lambda _: parser.print_usage()
 
@@ -338,6 +342,10 @@ def define_commands(parser):
 
     list_data_parser = data_subparser.add_parser("list", help="lists files inside the cache of the selected project")
     list_data_parser.set_defaults(func=list_data)
+
+    # Update by pulling the latest version of master on the git project
+    update_parser = subparsers.add_parser("update", help="update by pulling the latest version of master on the git project")
+    update_parser.set_defaults(func=update_project)
 
 
 if __name__ == '__main__':
