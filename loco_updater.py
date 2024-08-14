@@ -78,7 +78,13 @@ def fix_loco_header(target_file):
         if line[0] == "-":
             removed_lines.append(line[1:])
         elif line[0] == "+":
-            added_lines.append(line[1:])
+            added_line = line[1:]
+
+            has_header_ended = added_line.startswith("    <")
+            if has_header_ended:
+                break
+
+            added_lines.append(added_line)
         else:
             break
     to_replace = "\n".join(added_lines)
