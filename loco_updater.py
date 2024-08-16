@@ -86,24 +86,23 @@ def fix_loco_header(target_file):
 
 
 def remove_unwanted_ids(target_file, target_ids):
-    print("target_ids:", target_ids)
-    walker = UnwantedIdsDiffWalker(target_ids)
+    walker = UnwantedIdsDiffWalker()
     walker.run(target_file)
 
-    print(walker.lines_to_remove)
     with open(target_file, "r+") as fd:
         lines = fd.readlines()
         out = ""
         for line in lines:
-            if any(line.startswith(line_to_remove) for line_to_remove in walker.lines_to_remove):
-                # print("EXCLUDING:", line[:-1])
-                continue
-
-            out += line
-            # print("KEEPING", line[:-1])
+            if any(line.startswith(added_line) for added_line in walker.added_lines):
+                should_keep = any((f'<string name="{target_id}"' in line) for target_id in target_ids)
+                if should_keep:
+                    out += line
+            else:
+                out += line
 
         fd.seek(0)
         fd.write(out)
+        fd.truncate()
 
 
 class DiffWalker:
@@ -147,30 +146,12 @@ class HeaderDiffWalker(DiffWalker):
 
 
 class UnwantedIdsDiffWalker(DiffWalker):
-    def __init__(self, target_ids):
-        self.lines_to_remove = []
-        self.lines_to_add = []
-        self.target_ids = target_ids
+    def __init__(self):
+        self.added_lines = []
 
     def walk(self, line, line_diff_type):
-        if line_diff_type == LineDiffType.nothing:
-            pass
-        elif line.startswith("    <"):
-            tag_line = line[4:]
-
-            if tag_line.startswith('<string name="'):
-                if line_diff_type == LineDiffType.removal:
-                    raise Exception("string ids of removed string resources are not supported for now")
-
-                string_id = tag_line[14:].split('"')[0]
-                if string_id in self.target_ids:
-                    pass
-
-                print("Removing string_id:", string_id)
-                self.lines_to_remove.append(line)
-
-            if tag_line.startswith('<plural name="'):
-                raise Exception("Plural string ids are unsupported for now")
+        if line_diff_type == LineDiffType.addition:
+            self.added_lines.append(line)
 
 
 class LineDiffType(Enum):
