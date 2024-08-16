@@ -21,7 +21,7 @@ default_filename = "generated_eml"
 
 
 def is_empty(string):
-    return string is None or not string.isprintable()
+    return string is None # or not string.isprintable()
 
 
 def save_eml_to_file(eml, subject):
