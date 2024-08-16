@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import xml.etree.ElementTree as ET
 import zipfile
+from enum import Enum
 
 import requests
 
@@ -17,7 +18,7 @@ project_root = config.get_project("global", "project_root")
 project_path = project_root + "/src/main/res"
 
 
-def update_loco():
+def update_loco(target_ids):
     loco_key = config.get_project("loco", "loco_key")
     zip_url = f"https://localise.biz/api/export/archive/xml.zip?format=android&filter=android&fallback=en&order=id&key={loco_key}"
 
@@ -43,6 +44,8 @@ def update_loco():
         shutil.copy(source_file, target_file)
 
         fix_loco_header(target_file)
+        if len(target_ids) > 0:
+            remove_unwanted_ids(target_file, target_ids)
 
     print("String resources updated")
 
@@ -82,6 +85,27 @@ def fix_loco_header(target_file):
         fd.write(fixed_file)
 
 
+def remove_unwanted_ids(target_file, target_ids):
+    print("target_ids:", target_ids)
+    walker = UnwantedIdsDiffWalker(target_ids)
+    walker.run(target_file)
+
+    print(walker.lines_to_remove)
+    with open(target_file, "r+") as fd:
+        lines = fd.readlines()
+        out = ""
+        for line in lines:
+            if any(line.startswith(line_to_remove) for line_to_remove in walker.lines_to_remove):
+                # print("EXCLUDING:", line[:-1])
+                continue
+
+            out += line
+            # print("KEEPING", line[:-1])
+
+        fd.seek(0)
+        fd.write(out)
+
+
 class DiffWalker:
     def walk(self, line, line_diff_type):
         pass
@@ -90,6 +114,9 @@ class DiffWalker:
         result = subprocess.run(f"git diff {target_file}", stdout=subprocess.PIPE, shell=True, universal_newlines=True)
         diff = result.stdout
         for line in diff.split("\n")[5:]:
+            if len(line) == 0:
+                continue
+
             if line[0] == "-":
                 returned_value = self.walk(line[1:], LineDiffType.removal)
             elif line[0] == "+":
@@ -117,6 +144,33 @@ class HeaderDiffWalker(DiffWalker):
                 return -1  # break
 
             self.added_lines.append(line)
+
+
+class UnwantedIdsDiffWalker(DiffWalker):
+    def __init__(self, target_ids):
+        self.lines_to_remove = []
+        self.lines_to_add = []
+        self.target_ids = target_ids
+
+    def walk(self, line, line_diff_type):
+        if line_diff_type == LineDiffType.nothing:
+            pass
+        elif line.startswith("    <"):
+            tag_line = line[4:]
+
+            if tag_line.startswith('<string name="'):
+                if line_diff_type == LineDiffType.removal:
+                    raise Exception("string ids of removed string resources are not supported for now")
+
+                string_id = tag_line[14:].split('"')[0]
+                if string_id in self.target_ids:
+                    pass
+
+                print("Removing string_id:", string_id)
+                self.lines_to_remove.append(line)
+
+            if tag_line.startswith('<plural name="'):
+                raise Exception("Plural string ids are unsupported for now")
 
 
 class LineDiffType(Enum):
