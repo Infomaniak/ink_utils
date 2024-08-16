@@ -70,30 +70,59 @@ def download_zip(zip_url):
 
 
 def fix_loco_header(target_file):
-    result = subprocess.run(f"git diff {target_file}", stdout=subprocess.PIPE, shell=True, universal_newlines=True)
-    diff = result.stdout
-    removed_lines = []
-    added_lines = []
-    for line in diff.split("\n")[5:]:
-        if line[0] == "-":
-            removed_lines.append(line[1:])
-        elif line[0] == "+":
-            added_line = line[1:]
+    walker = HeaderDiffWalker()
+    walker.run(target_file)
 
-            has_header_ended = added_line.startswith("    <")
-            if has_header_ended:
-                break
-
-            added_lines.append(added_line)
-        else:
-            break
-    to_replace = "\n".join(added_lines)
-    replace_with = "\n".join(removed_lines)
+    to_replace = "\n".join(walker.added_lines)
+    replace_with = "\n".join(walker.removed_lines)
     with open(target_file, "r+") as fd:
         file_content = fd.read()
         fixed_file = file_content.replace(to_replace, replace_with)
         fd.seek(0)
         fd.write(fixed_file)
+
+
+class DiffWalker:
+    def walk(self, line, line_diff_type):
+        pass
+
+    def run(self, target_file):
+        result = subprocess.run(f"git diff {target_file}", stdout=subprocess.PIPE, shell=True, universal_newlines=True)
+        diff = result.stdout
+        for line in diff.split("\n")[5:]:
+            if line[0] == "-":
+                returned_value = self.walk(line[1:], LineDiffType.removal)
+            elif line[0] == "+":
+                returned_value = self.walk(line[1:], LineDiffType.addition)
+            else:
+                returned_value = self.walk(None, LineDiffType.nothing)
+
+            if returned_value == -1:
+                break
+
+
+class HeaderDiffWalker(DiffWalker):
+    def __init__(self):
+        self.removed_lines = []
+        self.added_lines = []
+
+    def walk(self, line, line_diff_type):
+        if line_diff_type == LineDiffType.removal:
+            self.removed_lines.append(line)
+        elif line_diff_type == LineDiffType.nothing:
+            return -1  # break
+        else:
+            has_header_ended = line.startswith("    <")
+            if has_header_ended:
+                return -1  # break
+
+            self.added_lines.append(line)
+
+
+class LineDiffType(Enum):
+    addition = 0
+    removal = 1
+    nothing = 2
 
 
 def validate_strings():
