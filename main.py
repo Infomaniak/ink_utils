@@ -9,6 +9,7 @@ import subprocess
 import config
 import database as db
 import eml_writer as ew
+import font_size
 import loco_updater as lu
 import login as lg
 import projects
@@ -346,6 +347,13 @@ def define_commands(parser):
     # Update by pulling the latest version of master on the git project
     update_parser = subparsers.add_parser("update", help="update by pulling the latest version of master on the git project")
     update_parser.set_defaults(func=update_project)
+
+    # Set emulator font size
+    font_size_parser = subparsers.add_parser("font",
+                                             help="set emulator font size value in {small|min, normal|default|reset, large, largest|max}")
+    font_size_parser.add_argument("size", type=font_size.FontSize.from_string, choices=list(font_size.FontSize))
+    add_all_device_arg(font_size_parser)
+    font_size_parser.set_defaults(func=font_size.change_font_size)
 
 
 if __name__ == '__main__':
