@@ -4,7 +4,7 @@ import time
 import config as config
 from adb import adb, select_device, open_app
 
-sleep_duration = 0.9
+sleep_duration = 0.5
 login_page_sleep_duration = 1.5
 login_device_id = None
 
