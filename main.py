@@ -44,14 +44,26 @@ def copy_last_video(args):
 
 
 def update_loco(args):
+    project_root = config.get_project("global", "project_root")
+    res_folder_path = "/src/main/res"
+
+    loco_update_strategy = lu.LocoUpdateStrategy(
+        api_key=config.get_project("loco", "loco_key"),
+        copy_target_folder=project_root + res_folder_path,
+    )
+
+    import_strings(args, loco_update_strategy)
+
+
+def import_strings(args, loco_update_strategy):
     if not args.check:
-        successfully_updated = lu.update_loco(args.target_ids)
+        successfully_updated = lu.update_loco(args.target_ids, loco_update_strategy)
         if not successfully_updated:
             exit()
         print()
 
     print("Searching for errors in imported strings")
-    error_count = lu.validate_strings()
+    error_count = lu.validate_strings(loco_update_strategy)
     if error_count == 0:
         print("Found no error")
     else:

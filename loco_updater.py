@@ -15,11 +15,16 @@ archive_name = "downloaded.zip"
 value_folders = ['values', 'values-de', 'values-es', 'values-fr', 'values-it']
 
 project_root = config.get_project("global", "project_root")
-project_path = project_root + "/src/main/res"
 
 
-def update_loco(target_ids):
-    loco_key = config.get_project("loco", "loco_key")
+class LocoUpdateStrategy:
+    def __init__(self, api_key, copy_target_folder):
+        self.api_key = api_key
+        self.copy_target_folder = copy_target_folder
+
+
+def update_loco(target_ids, loco_update_strategy):
+    loco_key = loco_update_strategy.api_key
     zip_url = f"https://localise.biz/api/export/archive/xml.zip?format=android&filter=android&fallback=en&order=id&key={loco_key}"
 
     archive_path = download_zip(zip_url)
@@ -37,6 +42,7 @@ def update_loco(target_ids):
     os.chdir(project_root)
 
     # Copy the strings.xml files from the archive to the project's values folder
+    project_path = loco_update_strategy.copy_target_folder
     for value_folder in value_folders:
         target_file = f'{project_path}/{value_folder}/strings.xml'
         source_file = f'{cwd}/{files[0]}/res/{value_folder}/strings.xml'
@@ -160,9 +166,10 @@ class LineDiffType(Enum):
     nothing = 2
 
 
-def validate_strings():
+def validate_strings(loco_update_strategy):
     error_count = 0
 
+    project_path = loco_update_strategy.copy_target_folder
     for value_folder in value_folders:
         current_file = f'{project_path}/{value_folder}/strings.xml'
         tree = ET.parse(current_file)
