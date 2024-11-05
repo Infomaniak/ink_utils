@@ -13,6 +13,8 @@ drive:
         project_root: /Users/.../android-kDrive/app
 
 global:
+    loco:
+        core_key: ZZZ
     login:
         id: bob@infomaniak.com
         pwd: 1234
