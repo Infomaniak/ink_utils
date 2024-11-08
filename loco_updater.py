@@ -95,20 +95,63 @@ def remove_unwanted_ids(target_file, target_ids):
     walker = UnwantedIdsDiffWalker()
     walker.run(target_file)
 
-    with open(target_file, "r+") as fd:
-        lines = fd.readlines()
-        out = ""
-        for line in lines:
-            if any(line.startswith(added_line) for added_line in walker.added_lines):
-                should_keep = any((f'<string name="{target_id}"' in line) for target_id in target_ids)
-                if should_keep:
-                    out += line
-            else:
-                out += line
+    # print(walker.added_lines)
 
-        fd.seek(0)
-        fd.write(out)
-        fd.truncate()
+    # t = '<string name="settingsPasswordTitle">Protect your transfer with a password</string>'
+    # t_line = [line for line in walker.added_lines if t in line][0]
+
+    # print(any(t in line for line in walker.added_lines))
+    # print(any("settingsPasswordTitle" in line for line in walker.added_lines))
+    # print(any("string" in line for line in walker.added_lines))
+    # print(any("string" in line for line in walker.added_lines))
+
+    # print('name="' in t_line)
+
+    added_ids = [line.split('name="')[1].split('"')[0] for line in walker.added_lines if 'name="' in line]
+    # print("settingsPasswordTitle" in added_ids)
+
+
+    tree = ET.parse(target_file)
+
+    root = tree.getroot()
+    for element in root:
+        tag = element.tag
+        name = element.get("name")
+
+        if tag == "string" or tag == "plurals":
+            line_has_been_added = name in added_ids
+            is_target_id = name not in target_ids
+
+            should_remove = is_target_id and line_has_been_added
+
+            if name == "settingsPasswordTitle":
+                print(f"line_has_been_added: {line_has_been_added}")
+                print(f"is_target_id: {is_target_id}")
+                print(f"should_remove: {should_remove}")
+                exit()
+
+            if should_remove:
+                print(f"Unwanted id found: {name}")
+                root.remove(element)
+        else:
+            print(f"Skipping unexpected tag: {tag}")
+
+    tree.write(target_file, encoding="UTF-8")
+
+    # with open(target_file, "r+") as fd:
+    #     lines = fd.readlines()
+    #     out = ""
+    #     for line in lines:
+    #         if any(line.startswith(added_line) for added_line in walker.added_lines):
+    #             should_keep = any((f'<string name="{target_id}"' in line) for target_id in target_ids)
+    #             if should_keep:
+    #                 out += line
+    #         else:
+    #             out += line
+    #
+    #     fd.seek(0)
+    #     fd.write(out)
+    #     fd.truncate()
 
 
 class DiffWalker:
