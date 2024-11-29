@@ -13,7 +13,7 @@ import font_size
 import loco_updater as lu
 import login as lg
 import projects
-from adb import adb, select_device, close_app, open_app
+from adb import adb, select_device, close_app, open_app, select_device_or_all
 from adb_prop import show_layout_bounds, show_layout_bars
 from updater import check_for_updates, rm_cache as update_rm_cache, update_git_project
 from utils import select_in_list, accept_substitution, ink_folder
@@ -198,16 +198,17 @@ def ps1_bold(text, color):
 
 
 def rm_data(args):
-    device_id = select_device()
+    device_ids = select_device_or_all(args)
     package_name = config.get_project("global", "package_name")
 
-    if args.cache:
-        adb(f'shell run-as {package_name} "rm -rf ./cache"', device_id)
-    else:
-        adb(f"shell pm clear {package_name}", device_id)
+    for device_id in device_ids:
+        if args.cache:
+            adb(f'shell run-as {package_name} "rm -rf ./cache"', device_id)
+        else:
+            adb(f"shell pm clear {package_name}", device_id)
 
-    if args.restart:
-        open_app(device_id)
+        if args.restart:
+            open_app(device_id)
 
 
 def list_data(args):
@@ -372,6 +373,7 @@ def define_commands(parser):
     rm_data_parser.add_argument("-c", "--cache", action="store_true", default=False,
                                 help="only removes the cache")
     add_restart_app_arg(rm_data_parser)
+    add_all_device_arg(rm_data_parser)
     rm_data_parser.set_defaults(func=rm_data)
 
     list_data_parser = data_subparser.add_parser("list", help="lists files inside the cache of the selected project")
