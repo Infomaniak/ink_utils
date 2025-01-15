@@ -227,6 +227,13 @@ def update_project(args):
     update_git_project()
 
 
+def action_view(args):
+    devices = select_device_or_all(args)
+    package_name = config.get_project("global", "package_name")
+    for device in devices:
+        adb(f'shell am start -a android.intent.action.VIEW -d "{args.content}" {package_name}', device_id=device)
+
+
 def catch_empty_calls(parser):
     return lambda _: parser.print_usage()
 
@@ -389,6 +396,13 @@ def define_commands(parser):
     font_size_parser.add_argument("size", type=font_size.FontSize.from_string, choices=list(font_size.FontSize))
     add_all_device_arg(font_size_parser)
     font_size_parser.set_defaults(func=font_size.change_font_size)
+
+    # Action VIEW for an url, mainly for deeplinks
+    action_view_parser = subparsers.add_parser("view",
+                                               help="sends an ACTION_VIEW intent to the app with the provided argument. Mainly for deeplings")
+    action_view_parser.add_argument("content", nargs="?")
+    add_all_device_arg(action_view_parser)
+    action_view_parser.set_defaults(func=action_view)
 
 
 if __name__ == '__main__':
