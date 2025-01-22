@@ -7,6 +7,8 @@ from utils import ink_folder
 
 cache_file = ink_folder + "/updater_cache"
 
+update_cmd = "update"
+
 
 def run_git_local_cmd(cmd):
     out = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True, universal_newlines=True, cwd=ink_folder)
@@ -55,7 +57,10 @@ def cache_remote_hash(remote_hash):
         fd.write(datetime.now().isoformat() + "\n" + remote_hash)
 
 
-def check_for_updates():
+def check_for_updates(raw_args):
+    if raw_args == update_cmd:  # Do not check if there's an available update when the user is explicitly asking to update
+        return
+
     if does_current_branch_target_main():
         if is_cache_outdated():
             latest_hash = get_remote_main_hash()
