@@ -156,6 +156,13 @@ def manage_projects(args):
         projects.list_projects()
 
 
+def open_settings(args):
+    if args.folder:
+        subprocess.run(['open', config.script_folder], check=True)
+    else:
+        subprocess.run(['open', '-t', config.config_file], check=True)
+
+
 def manually_install_apk(args):
     device_id = select_device()
     project_path = config.get_project("global", "project_root")
@@ -357,6 +364,12 @@ def define_commands(parser):
                                            help="manages projects defined in settings. If no arg is supplied, lists the projects")
     project_parser.add_argument("selected_project", nargs="?", help="the project to select for future uses")
     project_parser.set_defaults(func=manage_projects)
+
+    # Project settings
+    settings_parser = subparsers.add_parser("settings", help="opens the settings file")
+    settings_parser.add_argument("-f", "--folder", action="store_true", default=False,
+                                 help="Only opens the folder containing the file")
+    settings_parser.set_defaults(func=open_settings)
 
     # Manual apk install
     manual_install_parser = subparsers.add_parser("forceinstall", help="manually installs the built debug apk")
