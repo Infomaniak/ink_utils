@@ -34,7 +34,12 @@ def _get(root_key, section, key, raise_error):
         print(f"Missing ink setting in {config_filename}: {root_key} > {section} > {key}")
         exit(-1)
 
-    value = project[section][key]
+    value = None
+    try:
+        value = project[section][key]
+    except:
+        pass
+
     if raise_error and value is None:
         print(f"Missing ink setting in {config_filename}: {root_key} > {section} > {key}")
         exit(-1)

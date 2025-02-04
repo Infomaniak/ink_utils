@@ -12,6 +12,13 @@ drive:
         package_name: com.infomaniak.drive
         project_root: /Users/.../android-kDrive/app
 
+ksuite:
+    loco:
+        loco_key: WWW
+        tag: my-ksuite
+    global:
+        project_root: /Users/.../android-mail/Core/MykSuite/
+
 global:
     loco:
         core_key: ZZZ

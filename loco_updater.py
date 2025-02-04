@@ -25,7 +25,8 @@ class LocoUpdateStrategy:
 
 def update_loco(target_ids, loco_update_strategy):
     loco_key = loco_update_strategy.api_key
-    zip_url = f"https://localise.biz/api/export/archive/xml.zip?format=android&filter=android&fallback=en&order=id&key={loco_key}"
+    tag = config.get_project("loco", "tag", raise_error=False) or "android"
+    zip_url = f"https://localise.biz/api/export/archive/xml.zip?format=android&filter=${tag}&fallback=en&order=id&key={loco_key}"
 
     archive_path = download_zip(zip_url)
     if archive_path is None:
