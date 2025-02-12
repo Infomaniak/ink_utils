@@ -1,0 +1,7 @@
+from inquirer.themes import Default as DefaultTheme, term
+
+
+class InkTheme(DefaultTheme):
+    def __init__(self):
+        super().__init__()
+        self.List.selection_color = term.aqua

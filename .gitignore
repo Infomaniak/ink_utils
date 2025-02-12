@@ -1,4 +1,5 @@
 settings.yml
 updater_cache
+inquirer_theme.py
 .current_project
 .DS_Store
