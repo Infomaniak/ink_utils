@@ -13,12 +13,8 @@ CurrentInkTheme = DefaultTheme
 
 if os.path.isfile(CUSTOM_CLASS_FILE):
     spec = importlib.util.spec_from_file_location("inquirer_theme", CUSTOM_CLASS_FILE)
-    print(spec)
     custom_module = importlib.util.module_from_spec(spec)
-    print(custom_module)
     spec.loader.exec_module(custom_module)
-
-    print("hasattr(custom_module, CLASS_NAME):", hasattr(custom_module, CLASS_NAME))
 
     # Check if the user defined the class
     if hasattr(custom_module, CLASS_NAME):
