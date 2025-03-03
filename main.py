@@ -4,6 +4,8 @@
 import argparse
 import glob
 import pathlib
+import random
+import signal
 import subprocess
 import sys
 
@@ -242,6 +244,26 @@ def action_view(args):
         adb(f'shell am start -a android.intent.action.VIEW -d "{args.content}" {package_name}', device_id=device)
 
 
+def signal_handler(sig, frame):
+    if random.randint(0, 15) == 0:
+        cancel_author = random.choice([
+            "Marc",
+            "a rogue AI gaining self-awareness",
+            "a mysterious force",
+            "Dave, who insists he knows best",
+            "a cat walking on the keyboard",
+            "a sentient paperclip offering help",
+            "a time traveler who knows something we don’t",
+            "a dramatic plot twist",
+            "your neighbor colleague",
+        ])
+    else:
+        cancel_author = "user"
+
+    print(f'\nOperation canceled by {cancel_author}', end="")
+    sys.exit(0)
+
+
 def catch_empty_calls(parser):
     return lambda _: parser.print_usage()
 
@@ -420,6 +442,8 @@ def define_commands(parser):
 
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGINT, signal_handler)
+
     raw_args = ' '.join(sys.argv[1:])
     check_for_updates(raw_args)
 
