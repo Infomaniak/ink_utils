@@ -260,7 +260,7 @@ def signal_handler(sig, frame):
     else:
         cancel_author = "user"
 
-    print(f'\nOperation canceled by {cancel_author}', end="")
+    print(f'\nOperation cancelled by {cancel_author}', end="")
     sys.exit(0)
 
 
