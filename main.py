@@ -4,7 +4,6 @@
 import argparse
 import glob
 import pathlib
-import random
 import signal
 import subprocess
 import sys
@@ -19,7 +18,7 @@ import projects
 from adb import adb, select_device, close_app, open_app, select_device_or_all
 from adb_prop import show_layout_bounds, show_layout_bars
 from updater import check_for_updates, rm_cache as update_rm_cache, update_git_project, update_cmd
-from utils import select_in_list, accept_substitution, ink_folder
+from utils import select_in_list, accept_substitution, ink_folder, cancel_ink_command
 
 
 def generate_eml(args):
@@ -245,23 +244,7 @@ def action_view(args):
 
 
 def signal_handler(sig, frame):
-    if random.randint(0, 15) == 0:
-        cancel_author = random.choice([
-            "Marc",
-            "a rogue AI gaining self-awareness",
-            "a mysterious force",
-            "Dave, who insists he knows best",
-            "a cat walking on the keyboard",
-            "a sentient paperclip offering help",
-            "a time traveler who knows something we don’t",
-            "a dramatic plot twist",
-            "your neighbor colleague",
-        ])
-    else:
-        cancel_author = "user"
-
-    print(f'\nOperation cancelled by {cancel_author}', end="")
-    sys.exit(0)
+    cancel_ink_command(message_end="")
 
 
 def catch_empty_calls(parser):

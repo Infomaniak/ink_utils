@@ -3,7 +3,7 @@ import shutil
 import subprocess
 
 import config as config
-from adb import adb, select_device, close_app, open_app, select_device_or_all
+from adb import adb, select_device, close_app, open_app, select_device_or_all, warn_if_current_project_app_is_not_focused
 from utils import remove_empty_items, select_in_list
 
 
@@ -15,6 +15,8 @@ def clear_mail_db(args):
     package_name = config.get_project("global", "package_name")
 
     for device_id in select_device_or_all(args):
+        warn_if_current_project_app_is_not_focused(device_id)
+
         if args.mailbox or args.everything:
             adb(f"exec-out run-as {package_name} find ./files -name 'Mailbox-*-*.realm*' -exec rm -r {{}} \\;", device_id)
 

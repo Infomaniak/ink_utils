@@ -1,7 +1,7 @@
 import subprocess
 
 import config
-from utils import remove_empty_items, select_in_list
+from utils import remove_empty_items, select_in_list, cancel_ink_command
 
 
 def adb(command_args, device_id, stderr=None):
@@ -41,3 +41,22 @@ def close_app(device_id):
 def open_app(device_id):
     package_name = config.get_project("global", "package_name")
     adb(f"shell monkey -p {package_name} -c android.intent.category.LAUNCHER 1", device_id, stderr=subprocess.DEVNULL)
+
+
+def get_focused_app_package_name(device_id):
+    return adb(
+        """shell dumpsys activity top | grep "ACTIVITY" | tail -n 1 | awk '{print $2}' | cut -d '/' -f1""",
+        device_id,
+    ).stdout.strip()
+
+
+def warn_if_current_project_app_is_not_focused(device_id):
+    focused_package_name = get_focused_app_package_name(device_id)
+    if not focused_package_name.startswith("com.infomaniak"):
+        return
+    
+    selected_package_name = config.get_project("global", "package_name")
+    if focused_package_name != selected_package_name:
+        choice = select_in_list("Current project is different from focused app. Continue anyway?", ["Yes", "No"])
+        if choice == "No":
+            cancel_ink_command()

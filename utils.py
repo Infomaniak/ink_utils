@@ -1,5 +1,7 @@
 import importlib.util
 import os
+import random
+import sys
 
 import inquirer
 from inquirer.themes import Default as DefaultTheme
@@ -43,3 +45,22 @@ def accept_substitution(input):
         output = input
 
     return output
+
+
+def cancel_ink_command(message_end='\n'):
+    if random.randint(0, 7) == 0:
+        cancel_author = random.choice([
+            "Marc",
+            "a rogue AI gaining self-awareness",
+            "a mysterious force",
+            "Dave, who insists he knows best",
+            "a cat walking on the keyboard",
+            "a sentient paperclip offering help",
+            "a time traveler who knows something we don’t",
+            "a dramatic plot twist",
+            "your neighbor colleague",
+        ])
+    else:
+        cancel_author = "user"
+    print(f'\nOperation cancelled by {cancel_author}', end=message_end)
+    sys.exit(0)
