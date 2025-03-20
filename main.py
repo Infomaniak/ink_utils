@@ -23,7 +23,7 @@ from utils import select_in_list, accept_substitution, ink_folder, cancel_ink_co
 
 def generate_eml(args):
     html = accept_substitution(args.html)
-    ew.new_eml(args.subject, args.sender, args.to, args.cc, html)
+    ew.new_eml(args.subject, args.sender, args.to, args.cc, args.with_date, html)
 
 
 def copy_last_video(args):
@@ -305,6 +305,8 @@ def define_commands(parser):
                                                           "than one")
     eml_parser.add_argument("-c", "--cc", dest="cc", help="recipient of a copy of the mail. Comma separated if "
                                                           "there's mor than one")
+    eml_parser.add_argument("-nd", "--no-date", dest="with_date", action="store_false", default=True,
+                            help="do not automatically define a date")
     eml_parser.set_defaults(func=generate_eml)
 
     # Open last video

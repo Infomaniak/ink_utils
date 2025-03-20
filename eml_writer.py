@@ -40,7 +40,7 @@ def add_field(eml, field, value):
         eml[field] = value
 
 
-def new_eml(subject, sender, recipient, carbon_copy, html):
+def new_eml(subject, sender, recipient, carbon_copy, with_date, html):
     # Set default values if they do not exist
     if is_empty(subject):
         subject = default_subject
@@ -65,7 +65,8 @@ def new_eml(subject, sender, recipient, carbon_copy, html):
     add_field(eml, 'From', sender)
     add_field(eml, 'To', recipient)
     add_field(eml, 'Cc', carbon_copy)
-    add_field(eml, 'Date', date)
+    if with_date:
+        add_field(eml, 'Date', date)
     part = MIMEText(html, 'html')
 
     eml.attach(part)
