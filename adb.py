@@ -45,7 +45,7 @@ def open_app(device_id):
 
 def get_focused_app_package_name(device_id):
     return adb(
-        """shell dumpsys activity top | grep "ACTIVITY" | tail -n 1 | awk '{print $2}' | cut -d '/' -f1""",
+        r"shell dumpsys activity activities | grep -E 'mFocusedApp' | sed -E 's/.* ([^ ]+)\/.*/\1/'",
         device_id,
     ).stdout.strip()
 
