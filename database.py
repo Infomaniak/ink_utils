@@ -33,8 +33,9 @@ def open_db(args):
 
     result = adb(f"shell run-as {package_name} {ls_files} | {select_columns} | {keep_db}", device_id)
     files = remove_empty_items(result.stdout.split("\n"))
+    aligned_files = align_columns(files)
 
-    filename = select_in_list("Select database", files).split(" ")[0]
+    filename = select_in_list("Select database", aligned_files).split(" ")[0]
 
     working_directory = "/tmp/ink_db_pull/"
     if os.path.exists(working_directory):
@@ -44,6 +45,22 @@ def open_db(args):
     pull_local_file(f"./files/{filename}", f"{working_directory}/{filename}", package_name, device_id)
 
     subprocess.Popen(("open", working_directory + filename), cwd=None)
+
+
+def align_columns(files):
+    # Split each line into columns
+    split_lines = [line.split(" ") for line in files]
+
+    # Find the max width for each column
+    col_widths = [max(len(row[i]) for row in split_lines) for i in range(len(split_lines[0]))]
+
+    # Format each line
+    formatted_lines = []
+    for row in split_lines:
+        formatted_line = "  ".join(col.ljust(col_widths[i]) for i, col in enumerate(row))
+        formatted_lines.append(formatted_line)
+
+    return formatted_lines
 
 
 def get_regex_db_pattern():
