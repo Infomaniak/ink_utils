@@ -50,6 +50,8 @@ def get_focused_app_package_name(device_id):
     ).stdout.strip()
 
 
+# If one of our application is focused but the currently checked out project is different, ask confirmation from the user before
+# executing the rest of the code
 def warn_if_current_project_app_is_not_focused(device_id):
     focused_package_name = get_focused_app_package_name(device_id)
     if not focused_package_name.startswith("com.infomaniak"):

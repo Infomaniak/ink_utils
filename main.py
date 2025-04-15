@@ -15,7 +15,7 @@ import font_size
 import loco_updater as lu
 import login as lg
 import projects
-from adb import adb, select_device, close_app, open_app, select_device_or_all
+from adb import adb, select_device, close_app, open_app, select_device_or_all, warn_if_current_project_app_is_not_focused
 from adb_prop import show_layout_bounds, show_layout_bars
 from updater import check_for_updates, rm_cache as update_rm_cache, update_git_project, update_cmd
 from utils import select_in_list, accept_substitution, ink_folder, cancel_ink_command
@@ -211,6 +211,8 @@ def rm_data(args):
     package_name = config.get_project("global", "package_name")
 
     for device_id in device_ids:
+        warn_if_current_project_app_is_not_focused(device_id)
+
         if args.cache:
             adb(f'shell run-as {package_name} "rm -rf ./cache"', device_id)
         else:
