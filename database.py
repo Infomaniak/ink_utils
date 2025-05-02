@@ -3,7 +3,9 @@ import shutil
 import subprocess
 
 import config as config
-from adb import adb, select_device, close_app, open_app, select_device_or_all, warn_if_current_project_app_is_not_focused
+import utils
+from adb import adb, select_device, close_app, open_app, select_device_or_all, warn_if_current_project_app_is_not_focused, \
+    pull_local_file
 from utils import remove_empty_items, select_in_list
 
 
@@ -38,9 +40,10 @@ def open_db(args):
     filename = select_in_list("Select database", aligned_files).split(" ")[0]
 
     working_directory = "/tmp/ink_db_pull/"
-    if os.path.exists(working_directory):
-        shutil.rmtree(working_directory)
-    os.makedirs(working_directory, exist_ok=True)
+    utils.create_folder_and_remove_if_exists(working_directory)
+    # if os.path.exists(working_directory):
+    #     shutil.rmtree(working_directory)
+    # os.makedirs(working_directory, exist_ok=True)
 
     pull_local_file(f"./files/{filename}", f"{working_directory}/{filename}", package_name, device_id)
 
@@ -79,7 +82,3 @@ def pull_local_dir(src_path, dest_path, device_id):
     files = remove_empty_items(result.stdout.split("\n"))
     for file in files:
         pull_local_file(f"{src_path}/{file}", f"{dest_path}/{file}", package_name, device_id)
-
-
-def pull_local_file(src_path, dest_path, package_name, device_id):
-    adb(f"exec-out run-as {package_name} cat '{src_path}' > {dest_path}", device_id)

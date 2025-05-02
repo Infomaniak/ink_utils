@@ -15,7 +15,9 @@ import font_size
 import loco_updater as lu
 import login as lg
 import projects
-from adb import adb, select_device, close_app, open_app, select_device_or_all, warn_if_current_project_app_is_not_focused
+import utils
+from adb import adb, select_device, close_app, open_app, select_device_or_all, warn_if_current_project_app_is_not_focused, \
+    pull_local_file, push_local_file, get_device_count
 from adb_prop import show_layout_bounds, show_layout_bars
 from updater import check_for_updates, rm_cache as update_rm_cache, update_git_project, update_cmd
 from utils import select_in_list, accept_substitution, ink_folder, cancel_ink_command
@@ -259,6 +261,30 @@ def print_patch_note(args):
                        cwd=project_git_path)
 
 
+def clone_users(args):
+    if get_device_count():
+        print("Only a single emulator is detected")
+        exit()
+
+    source_device = select_device("What device will users be copied from?")
+    target_device = select_device("What device will users be copied to?")
+    package_name = config.get_project("global", "package_name")
+
+    database_file_name = "user_database"
+    destination_folder = "/tmp/ink_copied_user"
+
+    utils.create_folder_and_remove_if_exists(destination_folder)
+    copy_file(database_file_name, destination_folder, package_name, source_device, target_device)
+
+
+def copy_file(database_file_name, destination_folder, package_name, source_device, target_device):
+    pull_local_file(f"./databases/{database_file_name}", f"{destination_folder}/{database_file_name}", package_name,
+                    source_device)
+    adb(f"shell run-as {package_name} 'rm -rf ./databases'", device_id=target_device)
+    push_local_file(f"{destination_folder}/{database_file_name}", "databases", package_name,
+                    target_device)
+
+
 def signal_handler(sig, frame):
     cancel_ink_command(message_end="")
 
@@ -434,6 +460,11 @@ def define_commands(parser):
     action_view_parser.add_argument("-s", "--short", action="store_true", default=False,
                                     help="prints in a more compact manner")
     action_view_parser.set_defaults(func=print_patch_note)
+
+    # Copy connected users to another emulator
+    clone_user_parser = subparsers.add_parser("cloneusers",
+                                              help="clone the user database from one app to another in order to bypass login")
+    clone_user_parser.set_defaults(func=clone_users)
 
 
 if __name__ == '__main__':

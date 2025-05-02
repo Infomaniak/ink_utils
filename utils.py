@@ -1,6 +1,7 @@
 import importlib.util
 import os
 import random
+import shutil
 import sys
 
 import inquirer
@@ -64,3 +65,9 @@ def cancel_ink_command(message_end='\n'):
         cancel_author = "user"
     print(f'\nOperation cancelled by {cancel_author}', end=message_end)
     sys.exit(0)
+
+
+def create_folder_and_remove_if_exists(folder_path):
+    if os.path.exists(folder_path):
+        shutil.rmtree(folder_path)
+    os.makedirs(folder_path, exist_ok=True)
