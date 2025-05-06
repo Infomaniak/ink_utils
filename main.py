@@ -249,9 +249,9 @@ def print_patch_note(args):
     project_git_path = config.get_project("global", "project_root") + "/.."
 
     if args.start_git_ref is None:
-        subprocess.run("./get_latest_merges.sh", cwd=project_git_path)
+        subprocess.run(config.script_folder + "/get_latest_merges.sh", cwd=project_git_path)
     else:
-        subprocess.run(("./get_latest_merges.sh", args.start_git_ref), cwd=project_git_path)
+        subprocess.run((config.script_folder + "/get_latest_merges.sh", args.start_git_ref), cwd=project_git_path)
 
 
 def signal_handler(sig, frame):

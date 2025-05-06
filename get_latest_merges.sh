@@ -21,6 +21,9 @@ clean_message() {
   sed -E 's/^(feat:|fix:)[ ]*//' | sed -E 's/[[:space:]]*\(#([0-9]+)\)[[:space:]]*$//'
 }
 
+echo "Merged PRs on master since: $START_REF"
+
+echo ""
 echo "Features:"
 echo "$PR_MESSAGES" | grep -E '^feat:' | clean_message || echo "(none)"
 
