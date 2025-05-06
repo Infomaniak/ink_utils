@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# When called with no argument, this script will print the list of PRs that have been merged since the biggest version number 
+# present in the tags. When called with an argument, it will take this reference as the starting point to list merged PRs.
+
+# Optional argument: starting point (e.g., a tag or SHA)
+START_REF=${1}
+
+# If not provided, fall back to latest version tag
+if [ -z "$START_REF" ]; then
+  START_REF=$(git tag | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+fi
+
+# Searches for remote main or master's SHA
+LATEST_MASTER_SHA=$(git ls-remote --heads origin main master | awk '/refs\/heads\/main/ {print "main", $1; exit} /refs\/heads\/master/ {print "master", $1; exit}' | awk '{print $2}')
+
+# Get merge commit messages
+PR_MESSAGES=$(git log --merges $START_REF..$LATEST_MASTER_SHA --pretty=format:"%s")
+
+clean_message() {
+  sed -E 's/^(feat:|fix:)[ ]*//' | sed -E 's/[[:space:]]*\(#([0-9]+)\)[[:space:]]*$//'
+}
+
+echo "Features:"
+echo "$PR_MESSAGES" | grep -E '^feat:' | clean_message || echo "(none)"
+
+echo ""
+echo "Fixes:"
+echo "$PR_MESSAGES" | grep -E '^fix:' | clean_message || echo "(none)"
+
+echo ""
+echo "Other:"
+echo "$PR_MESSAGES" | grep -vE '^(feat:|fix:)' || echo "(none)"

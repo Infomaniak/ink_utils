@@ -245,6 +245,15 @@ def action_view(args):
         adb(f'shell am start -a android.intent.action.VIEW -d "{args.content}" {package_name}', device_id=device)
 
 
+def print_patch_note(args):
+    project_git_path = config.get_project("global", "project_root") + "/.."
+
+    if args.start_git_ref is None:
+        subprocess.run("./get_latest_merges.sh", cwd=project_git_path)
+    else:
+        subprocess.run(("./get_latest_merges.sh", args.start_git_ref), cwd=project_git_path)
+
+
 def signal_handler(sig, frame):
     cancel_ink_command(message_end="")
 
@@ -411,6 +420,13 @@ def define_commands(parser):
     action_view_parser.add_argument("content", nargs="?")
     add_all_device_arg(action_view_parser)
     action_view_parser.set_defaults(func=action_view)
+
+    # Pretty prints all PRs that got merged inside master since last version
+    action_view_parser = subparsers.add_parser("patchnote",
+                                               help="pretty prints all PRs that got merged inside master since last version")
+    action_view_parser.add_argument("start_git_ref", nargs="?",
+                                    help="any valid git ref. The command will compare remote master to this git ref if provided, else it detects the biggest tag automatically")
+    action_view_parser.set_defaults(func=print_patch_note)
 
 
 if __name__ == '__main__':
