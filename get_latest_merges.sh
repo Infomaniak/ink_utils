@@ -17,20 +17,21 @@ LATEST_MASTER_SHA=$(git ls-remote --heads origin main master | awk '/refs\/heads
 # Get merge commit messages
 PR_MESSAGES=$(git log --merges $START_REF..$LATEST_MASTER_SHA --pretty=format:"%s")
 
+# Remove prefix like "fix(scope): " or "feat: " and trailing "(#1234)"
 clean_message() {
-  sed -E 's/^(feat:|fix:)[ ]*//' | sed -E 's/[[:space:]]*\(#([0-9]+)\)[[:space:]]*$//'
+  sed -E 's/^(feat|fix)(\([^)]+\))?:[ ]*//' | sed -E 's/[[:space:]]*\(#([0-9]+)\)[[:space:]]*$//'
 }
 
 echo "Merged PRs on master since: $START_REF"
 
 echo ""
 echo "Features:"
-echo "$PR_MESSAGES" | grep -E '^feat:' | clean_message || echo "(none)"
+echo "$PR_MESSAGES" | grep -E '^feat(\([^)]+\))?:' | clean_message || echo "(none)"
 
 echo ""
 echo "Fixes:"
-echo "$PR_MESSAGES" | grep -E '^fix:' | clean_message || echo "(none)"
+echo "$PR_MESSAGES" | grep -E '^fix(\([^)]+\))?:' | clean_message || echo "(none)"
 
 echo ""
 echo "Other:"
-echo "$PR_MESSAGES" | grep -vE '^(feat:|fix:)' || echo "(none)"
+echo "$PR_MESSAGES" | grep -vE '^(feat|fix)(\([^)]+\))?:' || echo "(none)"
