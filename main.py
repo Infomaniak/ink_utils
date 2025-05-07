@@ -8,6 +8,7 @@ import signal
 import subprocess
 import sys
 
+import adb_utils
 import config
 import database as db
 import eml_writer as ew
@@ -262,31 +263,49 @@ def print_patch_note(args):
 
 
 def clone_users(args):
-    if get_device_count():
+    current_package_name = config.get_project("global", "package_name")
+
+    if get_device_count() == 1:
         print("Only a single emulator is detected")
         package_names = config.get_defined_package_names_list()
-        print(package_names)
+        package_names.remove(current_package_name)
         device_id = select_device()
-        print(utils.get_installed_package_names_in_list(package_names, device_id))
-        exit()
 
-    source_device = select_device("What device will users be copied from?")
-    target_device = select_device("What device will users be copied to?")
-    package_name = config.get_project("global", "package_name")
+        other_installed_packages = adb_utils.get_installed_package_names_in_list(package_names, device_id)
+
+        if len(other_installed_packages) == 0:
+            print("No other installed packages to copy users from")
+            exit()
+
+        other_installed_packages.sort()
+        chosen_package_name = select_in_list("Select from another package?", other_installed_packages)
+        print(f"Copying from {chosen_package_name}")
+
+        source_device = device_id
+        target_device = device_id
+
+        source_package_name = chosen_package_name
+        target_package_name = current_package_name
+
+    else:
+        source_device = select_device("What device will users be copied from?")
+        target_device = select_device("What device will users be copied to?")
+
+        source_package_name = current_package_name
+        target_package_name = current_package_name
 
     database_file_name = "user_database"
     destination_folder = "/tmp/ink_copied_user"
 
     utils.create_folder_and_remove_if_exists(destination_folder)
-    copy_file(database_file_name, destination_folder, package_name, source_device, target_device)
+    copy_file(database_file_name, destination_folder, source_package_name, target_package_name, source_device, target_device)
 
 
-def copy_file(database_file_name, destination_folder, package_name, source_device, target_device):
-    pull_local_file(f"./databases/{database_file_name}", f"{destination_folder}/{database_file_name}", package_name,
+def copy_file(database_file_name, destination_folder, source_package_name, target_package_name, source_device, target_device):
+    pull_local_file(f"./databases/{database_file_name}", f"{destination_folder}/{database_file_name}", source_package_name,
                     source_device)
-    adb(f"shell run-as {package_name} 'rm -rf ./databases'", device_id=target_device)
-    push_local_file(f"{destination_folder}/{database_file_name}", "databases", package_name,
-                    target_device)
+    adb(f"shell run-as {target_package_name} 'rm -rf ./databases'", device_id=target_device)
+    push_local_file(f"{destination_folder}/{database_file_name}", "databases", target_package_name, target_device)
 
 
 def signal_handler(sig, frame):
