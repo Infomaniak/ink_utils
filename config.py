@@ -53,6 +53,17 @@ def ensure_settings_exist():
         quit()
 
 
+def get_defined_package_names_list():
+    projects = list_projects()
+    package_names = set()
+    for key in projects:
+        package_name = _get(key, "global", "package_name", False)
+        if package_name is not None:
+            package_names.add(package_name)
+
+    return package_names
+
+
 if os.path.exists(config_file):
     missing_config_file = False
 

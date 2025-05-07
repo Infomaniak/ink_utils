@@ -7,6 +7,8 @@ import sys
 import inquirer
 from inquirer.themes import Default as DefaultTheme
 
+from adb import adb
+
 ink_folder = os.path.abspath(os.path.dirname(__file__))
 
 # Custom overridable theme
@@ -37,6 +39,11 @@ def select_in_list(message, choices):
         return choices[0]
     return inquirer.prompt([inquirer.List('choice', message=message, choices=choices)], theme=CurrentInkTheme())['choice']
 
+
+def get_installed_package_names_in_list(package_names, device_id):
+    for package_name in package_names:
+        result = adb(f"shell cmd package list packages {package_name}", device_id).stdout.strip()
+        print(result)
 
 def accept_substitution(input):
     if input is not None and input.startswith("/dev/fd"):

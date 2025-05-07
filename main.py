@@ -264,6 +264,10 @@ def print_patch_note(args):
 def clone_users(args):
     if get_device_count():
         print("Only a single emulator is detected")
+        package_names = config.get_defined_package_names_list()
+        print(package_names)
+        device_id = select_device()
+        print(utils.get_installed_package_names_in_list(package_names, device_id))
         exit()
 
     source_device = select_device("What device will users be copied from?")
