@@ -22,15 +22,21 @@ clean_message() {
   sed -E 's/^[a-zA-Z]+(\([^)]+\))?:[ ]*//' | sed -E 's/[[:space:]]*\(#([0-9]+)\)[[:space:]]*$//'
 }
 
+# Prints cleaned messages by tag (wraps raw method + clean)
+print_cleaned_messages_by_tag() {
+  TAG="$1"
+  echo "$PR_MESSAGES" | grep -E "^$TAG(\([^)]+\))?:" | clean_message
+}
+
 echo "Merged PRs on master since: $START_REF"
 
 echo ""
 echo "Features:"
-echo "$PR_MESSAGES" | grep -E '^feat(\([^)]+\))?:' | clean_message || echo "(none)"
+print_cleaned_messages_by_tag "feat" || echo "(none)"
 
 echo ""
 echo "Fixes:"
-echo "$PR_MESSAGES" | grep -E '^fix(\([^)]+\))?:' | clean_message || echo "(none)"
+print_cleaned_messages_by_tag "fix" || echo "(none)"
 
 echo ""
 echo "Other:"
