@@ -19,7 +19,7 @@ PR_MESSAGES=$(git log --merges $START_REF..$LATEST_MASTER_SHA --pretty=format:"%
 
 # Remove prefix like "fix(scope): " or "feat: " and trailing "(#1234)"
 clean_message() {
-  sed -E 's/^(feat|fix)(\([^)]+\))?:[ ]*//' | sed -E 's/[[:space:]]*\(#([0-9]+)\)[[:space:]]*$//'
+  sed -E 's/^[a-zA-Z]+(\([^)]+\))?:[ ]*//' | sed -E 's/[[:space:]]*\(#([0-9]+)\)[[:space:]]*$//'
 }
 
 echo "Merged PRs on master since: $START_REF"
