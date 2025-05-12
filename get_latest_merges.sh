@@ -4,7 +4,20 @@
 # present in the tags. When called with an argument, it will take this reference as the starting point to list merged PRs.
 
 # Optional argument: starting point (e.g., a tag or SHA)
-START_REF=${1}
+START_REF=""
+SHORT_PRINT="false"
+
+# Parse args
+for arg in "$@"; do
+    if [[ "$arg" == "--short" ]]; then
+        SHORT_PRINT="true"
+    elif [[ -z "$START_REF" ]]; then
+        START_REF="$arg"
+    else
+        echo "Unknown argument: $arg"
+        exit 1
+    fi
+done
 
 # If not provided, fall back to latest version tag
 if [ -z "$START_REF" ]; then
@@ -28,16 +41,37 @@ print_cleaned_messages_by_tag() {
   echo "$PR_MESSAGES" | grep -E "^$TAG(\([^)]+\))?:" | clean_message
 }
 
-echo "Merged PRs on master since: $START_REF"
+pretty_print() {
+  echo "Merged PRs on master since: $START_REF"
 
-echo ""
-echo "Features:"
-print_cleaned_messages_by_tag "feat" || echo "(none)"
+  echo ""
+  echo "Features:"
+  print_cleaned_messages_by_tag "feat" || echo "(none)"
 
-echo ""
-echo "Fixes:"
-print_cleaned_messages_by_tag "fix" || echo "(none)"
+  echo ""
+  echo "Fixes:"
+  print_cleaned_messages_by_tag "fix" || echo "(none)"
 
-echo ""
-echo "Other:"
-echo "$PR_MESSAGES" | grep -vE '^(feat|fix)(\([^)]+\))?:' || echo "(none)"
+  echo ""
+  echo "Other:"
+  echo "$PR_MESSAGES" | grep -vE '^(feat|fix)(\([^)]+\))?:' || echo "(none)"
+}
+
+short_print() {
+  echo "Merged PRs on master since: $START_REF"
+
+  echo ""
+  print_cleaned_messages_by_tag "feat" || echo "(none)"
+
+  echo ""
+  print_cleaned_messages_by_tag "fix" || echo "(none)"
+
+  echo ""
+  echo "$PR_MESSAGES" | grep -vE '^(feat|fix)(\([^)]+\))?:' | clean_message || echo "(none)"
+}
+
+if [[ "$SHORT_PRINT" == "true" ]]; then
+    short_print
+else
+    pretty_print
+fi

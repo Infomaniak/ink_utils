@@ -248,10 +248,15 @@ def action_view(args):
 def print_patch_note(args):
     project_git_path = config.get_project("global", "project_root") + "/.."
 
-    if args.start_git_ref is None:
+    if args.start_git_ref is None and args.short is False:
         subprocess.run(config.script_folder + "/get_latest_merges.sh", cwd=project_git_path)
-    else:
+    elif not (args.start_git_ref is None) and args.short is False:
         subprocess.run((config.script_folder + "/get_latest_merges.sh", args.start_git_ref), cwd=project_git_path)
+    elif args.start_git_ref is None and args.short:
+        subprocess.run((config.script_folder + "/get_latest_merges.sh", "--short"), cwd=project_git_path)
+    else:
+        subprocess.run((config.script_folder + "/get_latest_merges.sh", args.start_git_ref, "--short"),
+                       cwd=project_git_path)
 
 
 def signal_handler(sig, frame):
@@ -426,6 +431,8 @@ def define_commands(parser):
                                                help="pretty prints all PRs that got merged inside master since last version")
     action_view_parser.add_argument("start_git_ref", nargs="?",
                                     help="any valid git ref. The command will compare remote master to this git ref if provided, else it detects the biggest tag automatically")
+    action_view_parser.add_argument("-s", "--short", action="store_true", default=False,
+                                    help="prints in a more compact manner")
     action_view_parser.set_defaults(func=print_patch_note)
 
 
