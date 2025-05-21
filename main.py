@@ -282,6 +282,11 @@ def set_airplane_mode(enabled_or_disabled, device_id):
     adb(f'shell cmd connectivity airplane-mode {enabled_or_disabled}', device_id)
 
 
+def bump_core(args):
+    project_git_path = config.get_project("global", "project_root") + "/.."
+    subprocess.run((config.script_folder + "/bump_core.sh", args.core_branch_name), cwd=project_git_path)
+
+
 def signal_handler(sig, frame):
     cancel_ink_command(message_end="")
 
@@ -468,6 +473,13 @@ def define_commands(parser):
     airplane_mode_off_parser.set_defaults(func=force_airplane_off)
     airplane_mode_toggle_parser = airplane_mode_subparser.add_parser("toggle", help="toggle airplane mode enabled state")
     airplane_mode_toggle_parser.set_defaults(func=force_airplane_toggle)
+
+    # Automatically creates a PR to bump core
+    action_view_parser = subparsers.add_parser("bumpcore",
+                                               help="create a branch on current project which bumps core to target core branch")
+    action_view_parser.add_argument("core_branch_name", nargs="1",
+                                    help="core branch name that you want to update to")
+    action_view_parser.set_defaults(func=bump_core)
 
 
 if __name__ == '__main__':
