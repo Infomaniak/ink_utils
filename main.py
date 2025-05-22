@@ -259,6 +259,29 @@ def print_patch_note(args):
                        cwd=project_git_path)
 
 
+def force_airplane_on(args):
+    device_id = select_device()
+    set_airplane_mode("enable", device_id)
+
+
+def force_airplane_off(args):
+    device_id = select_device()
+    set_airplane_mode("disable", device_id)
+
+
+def force_airplane_toggle(args):
+    device_id = select_device()
+
+    result = adb('shell cmd connectivity airplane-mode', device_id).stdout.strip()
+    is_airplane_enabled = result == "enabled"
+    next_state = "disable" if is_airplane_enabled else "enable"
+    set_airplane_mode(next_state, device_id)
+
+
+def set_airplane_mode(enabled_or_disabled, device_id):
+    adb(f'shell cmd connectivity airplane-mode {enabled_or_disabled}', device_id)
+
+
 def signal_handler(sig, frame):
     cancel_ink_command(message_end="")
 
@@ -434,6 +457,17 @@ def define_commands(parser):
     action_view_parser.add_argument("-s", "--short", action="store_true", default=False,
                                     help="prints in a more compact manner")
     action_view_parser.set_defaults(func=print_patch_note)
+
+    # Sets airplane mode
+    airplane_mode_parser = subparsers.add_parser("airplane", help="set the airplane mode of the emulator")
+    airplane_mode_parser.set_defaults(func=catch_empty_calls(airplane_mode_parser))
+    airplane_mode_subparser = airplane_mode_parser.add_subparsers(help="airplane mode help")
+    airplane_mode_on_parser = airplane_mode_subparser.add_parser("on", help="enable airplane mode")
+    airplane_mode_on_parser.set_defaults(func=force_airplane_on)
+    airplane_mode_off_parser = airplane_mode_subparser.add_parser("off", help="disable airplane mode")
+    airplane_mode_off_parser.set_defaults(func=force_airplane_off)
+    airplane_mode_toggle_parser = airplane_mode_subparser.add_parser("toggle", help="toggle airplane mode enabled state")
+    airplane_mode_toggle_parser.set_defaults(func=force_airplane_toggle)
 
 
 if __name__ == '__main__':

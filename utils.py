@@ -48,7 +48,7 @@ def accept_substitution(input):
 
 
 def cancel_ink_command(message_end='\n'):
-    if random.randint(0, 7) == 0:
+    if random.randint(0, 5) == 0:
         cancel_author = random.choice([
             "Marc",
             "a rogue AI gaining self-awareness",
