@@ -63,7 +63,7 @@ def update_loco_core(args):
 
     loco_update_strategy = lu.LocoUpdateStrategy(
         api_key=config.get_global("loco", "core_key"),
-        copy_target_folder=project_root + "/../Core2" + res_folder_path,
+        copy_target_folder=project_root + "/../Core" + res_folder_path,
     )
 
     import_strings(args, loco_update_strategy)
