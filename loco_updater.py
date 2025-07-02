@@ -23,12 +23,21 @@ class LocoUpdateStrategy:
         self.copy_target_folder = copy_target_folder
 
 
-def update_loco(target_ids, loco_update_strategy):
+def update_loco(target_ids, loco_update_strategy, input_feature_tag):
     loco_key = loco_update_strategy.api_key
-    tag = config.get_project("loco", "tag", raise_error=False) or "android"
-    zip_url = f"https://localise.biz/api/export/archive/xml.zip?format=android&filter=${tag}&fallback=en&order=id&key={loco_key}"
+    android_tag = "android"
+    feature_tag = input_feature_tag or config.get_project("loco", "tag", raise_error=False)
 
-    archive_path = download_zip(zip_url)
+    tags_to_filter_out = None
+    if not (feature_tag is None):
+        tags = list_tags(loco_key)
+        tags.remove(android_tag)
+        tags.remove("ios")
+        tags.remove("ios-stringsdict")
+        tags.remove(feature_tag)
+        tags_to_filter_out = tags
+
+    archive_path = download_zip(android_tag, loco_key, tags_to_filter_out)
     if archive_path is None:
         return False
 
@@ -62,7 +71,21 @@ def update_loco(target_ids, loco_update_strategy):
     return True
 
 
-def download_zip(zip_url):
+def list_tags(loco_key):
+    api_url = "https://localise.biz/api/tags"
+    headers = {"Authorization": f"Loco {loco_key}"}
+    response = requests.get(api_url, headers=headers)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return None
+
+
+def download_zip(android_tag, loco_key, tags_to_filter_out):
+    negative_tags_query = join_to_string(tags_to_filter_out)
+    zip_url = f"https://localise.biz/api/export/archive/xml.zip?format=android&filter=${android_tag}${negative_tags_query}&fallback=en&order=id&key={loco_key}"
+
     archive_path = cwd + "/" + archive_name
 
     response = requests.get(zip_url)
@@ -77,6 +100,13 @@ def download_zip(zip_url):
         f.write(response.content)
 
     return archive_path
+
+
+def join_to_string(item_list):
+    if not item_list or any(item is None for item in item_list):
+        return ""
+    else:
+        return ',' + ','.join(f"!{item}" for item in item_list)
 
 
 def fix_loco_header(target_file):
