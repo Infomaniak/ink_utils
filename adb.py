@@ -5,7 +5,9 @@ from utils import remove_empty_items, select_in_list, cancel_ink_command
 
 
 def adb(command_args, device_id, stderr=None):
-    return subprocess.run("adb -s " + device_id + " " + command_args,
+    command = "adb -s " + device_id + " " + command_args
+    # print("Executing command:", command)
+    return subprocess.run(command,
                           stdout=subprocess.PIPE,
                           stderr=stderr,
                           shell=True,
@@ -56,7 +58,7 @@ def warn_if_current_project_app_is_not_focused(device_id):
     focused_package_name = get_focused_app_package_name(device_id)
     if not focused_package_name.startswith("com.infomaniak"):
         return
-    
+
     selected_package_name = config.get_project("global", "package_name")
     if focused_package_name != selected_package_name:
         choice = select_in_list("Current project is different from focused app. Continue anyway?", ["Yes", "No"])
