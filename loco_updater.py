@@ -26,6 +26,7 @@ class LocoUpdateStrategy:
 def update_loco(target_ids, loco_update_strategy, input_feature_tag):
     loco_key = loco_update_strategy.api_key
     android_tag = "android"
+    main_tag_to_query = android_tag
     feature_tag = input_feature_tag or config.get_project("loco", "tag", raise_error=False)
 
     tags_to_filter_out = None
@@ -36,8 +37,9 @@ def update_loco(target_ids, loco_update_strategy, input_feature_tag):
         tags.remove("ios-stringsdict")
         tags.remove(feature_tag)
         tags_to_filter_out = tags
+        main_tag_to_query = feature_tag
 
-    archive_path = download_zip(android_tag, loco_key, tags_to_filter_out)
+    archive_path = download_zip(main_tag_to_query, loco_key, tags_to_filter_out)
     if archive_path is None:
         return False
 
@@ -82,9 +84,9 @@ def list_tags(loco_key):
         return None
 
 
-def download_zip(android_tag, loco_key, tags_to_filter_out):
+def download_zip(main_tag, loco_key, tags_to_filter_out):
     negative_tags_query = join_to_string(tags_to_filter_out)
-    zip_url = f"https://localise.biz/api/export/archive/xml.zip?format=android&filter=${android_tag}${negative_tags_query}&fallback=en&order=id&key={loco_key}"
+    zip_url = f"https://localise.biz/api/export/archive/xml.zip?format=android&filter=${main_tag}${negative_tags_query}&fallback=en&order=id&key={loco_key}"
 
     archive_path = cwd + "/" + archive_name
 
