@@ -32,7 +32,7 @@ def _get(root_key, section, key, raise_error):
 
     if raise_error and (section not in project or key not in project[section]):
         print(f"Missing ink setting in {config_filename}: {root_key} > {section} > {key}")
-        exit(-1)
+        exit(1)
 
     value = None
     try:
@@ -42,7 +42,7 @@ def _get(root_key, section, key, raise_error):
 
     if raise_error and value is None:
         print(f"Missing ink setting in {config_filename}: {root_key} > {section} > {key}")
-        exit(-1)
+        exit(1)
 
     return value
 
@@ -50,7 +50,7 @@ def _get(root_key, section, key, raise_error):
 def ensure_settings_exist():
     if missing_config_file:
         print(f"Missing {config_filename} file at {script_folder}")
-        quit()
+        exit(1)
 
 
 if os.path.exists(config_file):

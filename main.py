@@ -73,7 +73,7 @@ def import_strings(args, loco_update_strategy, feature_tag):
     if not args.check:
         successfully_updated = lu.update_loco(args.target_ids, loco_update_strategy, feature_tag)
         if not successfully_updated:
-            exit()
+            exit(1)
         print()
 
     print("Searching for errors in imported strings")
@@ -83,6 +83,7 @@ def import_strings(args, loco_update_strategy, feature_tag):
     else:
         accord = "s" if error_count > 1 else ""
         print(f"\nFound {error_count} error{accord}")
+        exit(1)
 
 
 def login(args):
