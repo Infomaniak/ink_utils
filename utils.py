@@ -47,7 +47,7 @@ def accept_substitution(input):
     return output
 
 
-def cancel_ink_command(message_end='\n'):
+def cancel_ink_command(message_end='\n', exit_code=0):
     if random.randint(0, 5) == 0:
         cancel_author = random.choice([
             "Marc",
@@ -63,4 +63,4 @@ def cancel_ink_command(message_end='\n'):
     else:
         cancel_author = "user"
     print(f'\nOperation cancelled by {cancel_author}', end=message_end)
-    sys.exit(0)
+    sys.exit(exit_code)

@@ -283,7 +283,7 @@ def set_airplane_mode(enabled_or_disabled, device_id):
 
 
 def signal_handler(sig, frame):
-    cancel_ink_command(message_end="")
+    cancel_ink_command(message_end="", exit_code=130)  # interrupted by user
 
 
 def catch_empty_calls(parser):
