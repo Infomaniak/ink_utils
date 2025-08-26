@@ -85,6 +85,12 @@ def import_strings(args, loco_update_strategy, feature_tag):
     else:
         accord = "s" if error_count > 1 else ""
         print(f"\nFound {error_count} error{accord}")
+        if args.verbose:
+            print("\n[verbose]")
+            print("To fix this issue:")
+            print("  • Correct the strings and re-import translations into the project.")
+            print("  • If this is a false positive, add the string ID as an exception in loco_validator/validator.py, "
+                  "then confirm with the project maintainers.")
         exit(1)
 
 
@@ -349,6 +355,8 @@ def define_commands(parser):
     def add_loco_arguments(parser):
         parser.add_argument("-c", "--check", action="store_true", default=False,
                             help="only checks if strings in the project are correctly formatted but do not import")
+        parser.add_argument("-v", "--verbose", action="store_true", default=False,
+                            help="details steps to solve the issue")
         parser.add_argument("-t", "--tag", dest="tag", help="only pull strings from this tag")
         parser.add_argument("target_ids", nargs="*", help="limit string ids that get added")
 
