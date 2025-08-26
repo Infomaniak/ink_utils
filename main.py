@@ -50,7 +50,8 @@ def update_loco(args):
     res_folder_path = "/src/main/res"
 
     loco_update_strategy = lu.LocoUpdateStrategy(
-        api_key=config.get_project("loco", "loco_key"),
+        # If only checking strings validity, no need to raise an error for a missing loco api key
+        api_key=config.get_project("loco", "loco_key", raise_error=not args.check),
         copy_target_folder=project_root + res_folder_path,
     )
 
@@ -62,7 +63,8 @@ def update_loco_core(args):
     res_folder_path = "/src/main/res"
 
     loco_update_strategy = lu.LocoUpdateStrategy(
-        api_key=config.get_global("loco", "core_key"),
+        # If only checking strings validity, no need to raise an error for a missing loco api key
+        api_key=config.get_global("loco", "core_key", raise_error=not args.check),
         copy_target_folder=project_root + "/../Core" + res_folder_path,
     )
 
