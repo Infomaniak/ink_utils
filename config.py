@@ -30,7 +30,7 @@ def _get(root_key, section, key, raise_error):
 
     project = config[root_key]
 
-    if raise_error and (project[section] is None or (section not in project or key not in project[section])):
+    if raise_error and (section not in project or project[section] is None or key not in project[section]):
         print(f"Missing ink setting in {config_filename}: {root_key} > {section} > {key}")
         exit(1)
 
