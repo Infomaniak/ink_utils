@@ -14,6 +14,7 @@ import eml_writer as ew
 import font_size
 import loco_updater as lu
 import login as lg
+import navbar_mode
 import projects
 from adb import adb, select_device, close_app, open_app, select_device_or_all, warn_if_current_project_app_is_not_focused
 from adb_prop import show_layout_bounds, show_layout_bars
@@ -480,6 +481,12 @@ def define_commands(parser):
     airplane_mode_off_parser.set_defaults(func=force_airplane_off)
     airplane_mode_toggle_parser = airplane_mode_subparser.add_parser("toggle", help="toggle airplane mode enabled state")
     airplane_mode_toggle_parser.set_defaults(func=force_airplane_toggle)
+
+    # Change navbar gesture modes
+    navbar_mode_parser = subparsers.add_parser("navbar", help="set the navigation bar style between 3 buttons and gestures")
+    navbar_mode_parser.add_argument("mode", type=navbar_mode.NavbarMode.from_string, choices=list(navbar_mode.NavbarMode))
+    add_all_device_arg(navbar_mode_parser)
+    navbar_mode_parser.set_defaults(func=navbar_mode.set_navbar_mode)
 
 
 if __name__ == '__main__':
