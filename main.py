@@ -100,27 +100,26 @@ def login(args):
 
 
 def force_dark_mode(args):
-    device_id = select_device()
-    set_dark_mode("yes", device_id)
+    for device_id in select_device_or_all(args):
+        set_dark_mode("yes", device_id)
 
 
 def force_light_mode(args):
-    device_id = select_device()
-    set_dark_mode("no", device_id)
+    for device_id in select_device_or_all(args):
+        set_dark_mode("no", device_id)
 
 
 def toggle_dark_light_mode(args):
-    device_id = select_device()
+    for device_id in select_device_or_all(args):
+        result = adb('shell "cmd uimode night"', device_id)
 
-    result = adb('shell "cmd uimode night"', device_id)
+        is_night_mode_output = result.stdout.strip()
+        start_index = is_night_mode_output.rindex(": ") + 2
 
-    is_night_mode_output = result.stdout.strip()
-    start_index = is_night_mode_output.rindex(": ") + 2
+        is_night_mode = is_night_mode_output[start_index:] == "yes"
+        next_state = "no" if is_night_mode else "yes"
 
-    is_night_mode = is_night_mode_output[start_index:] == "yes"
-    next_state = "no" if is_night_mode else "yes"
-
-    set_dark_mode(next_state, device_id)
+        set_dark_mode(next_state, device_id)
 
 
 def set_dark_mode(yes_or_no, device_id):
@@ -385,10 +384,13 @@ def define_commands(parser):
     dark_mode_parser.set_defaults(func=catch_empty_calls(dark_mode_parser))
     color_subparser = dark_mode_parser.add_subparsers(help="dark mode help")
     dark_parser = color_subparser.add_parser("dark", help="sets dark mode")
+    add_all_device_arg(dark_parser)
     dark_parser.set_defaults(func=force_dark_mode)
     light_parser = color_subparser.add_parser("light", help="sets light mode")
+    add_all_device_arg(light_parser)
     light_parser.set_defaults(func=force_light_mode)
     toggle_parser = color_subparser.add_parser("toggle", help="toggles the current dark mode")
+    add_all_device_arg(toggle_parser)
     toggle_parser.set_defaults(func=toggle_dark_light_mode)
 
     # Apk extraction
