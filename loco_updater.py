@@ -149,18 +149,14 @@ class DiffWalker:
         pass
 
     def run(self, target_file):
-        result = subprocess.run(f"git diff {target_file}", stdout=subprocess.PIPE, shell=True, universal_newlines=True)
+        # -U0 forces the git diff to have zero padding lines around the diff to avoid breaking the detection
+        result = subprocess.run(f"git diff -U0 {target_file}", stdout=subprocess.PIPE, shell=True, universal_newlines=True)
         diff = result.stdout
         for line in diff.split("\n")[5:]:
             if len(line) == 0:
                 continue
 
-            # Somehow it seems possible on some git that the output might start with some lines that are neither deleted nor added
-            # before we encounter the deleted/added lines. In this case, ignore the line and ckeep looping through the remaining
-            # lines.
-            if line[0] == " ":
-                returned_value = 0  # 0 means continue looping through lines and ignore this line
-            elif line[0] == "-":
+            if line[0] == "-":
                 returned_value = self.walk(line[1:], LineDiffType.removal)
             elif line[0] == "+":
                 returned_value = self.walk(line[1:], LineDiffType.addition)
