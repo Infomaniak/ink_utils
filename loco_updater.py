@@ -39,6 +39,10 @@ def update_loco(target_ids, loco_update_strategy, input_feature_tag):
         tags_to_filter_out = tags
         main_tag_to_query = feature_tag
 
+    # Remove ink's tmp folder if it exists because the rest of the code relies on no other files being present
+    if os.path.exists(cwd):
+        shutil.rmtree(cwd)
+
     archive_path = download_zip(main_tag_to_query, loco_key, tags_to_filter_out)
     if archive_path is None:
         return False
