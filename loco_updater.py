@@ -59,6 +59,8 @@ def update_loco(target_ids, loco_update_strategy, input_feature_tag):
         target_file = f'{project_path}/{value_folder}/strings.xml'
         source_file = f'{cwd}/{files[0]}/res/{value_folder}/strings.xml'
 
+        fix_xml_indent_of_file_to(source_file, 4)
+
         shutil.copy(source_file, target_file)
 
         fix_loco_header(target_file)
@@ -109,6 +111,20 @@ def join_to_string(item_list):
         return ""
     else:
         return ',' + ','.join(f"!{item}" for item in item_list)
+
+
+def fix_xml_indent_of_file_to(target_file, indent_amount):
+    """
+    Parses an XML file, re-indents it with the given indentation amount,
+    and writes it back to the same file.
+
+    Args:
+        target_file (str | Path): Path to the XML file.
+        indent_amount (int): Number of spaces for indentation.
+    """
+    tree = ET.parse(target_file)
+    ET.indent(tree, space=" " * indent_amount)
+    tree.write(target_file, encoding="utf-8", xml_declaration=True)
 
 
 def fix_loco_header(target_file):
