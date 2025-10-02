@@ -155,7 +155,12 @@ class DiffWalker:
             if len(line) == 0:
                 continue
 
-            if line[0] == "-":
+            # Somehow it seems possible on some git that the output might start with some lines that are neither deleted nor added
+            # before we encounter the deleted/added lines. In this case, ignore the line and ckeep looping through the remaining
+            # lines.
+            if line[0] == " ":
+                returned_value = 0  # 0 means continue looping through lines and ignore this line
+            elif line[0] == "-":
                 returned_value = self.walk(line[1:], LineDiffType.removal)
             elif line[0] == "+":
                 returned_value = self.walk(line[1:], LineDiffType.addition)
