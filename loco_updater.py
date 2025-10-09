@@ -65,11 +65,12 @@ def update_loco(target_ids, loco_update_strategy, input_feature_tag):
 
         fix_xml_indent_of_file_to(source_file, 4)
 
-        shutil.copy(source_file, target_file)
+        update_android_strings(current_xml_path=target_file, new_xml_path=source_file, selected_tags=target_ids,
+                               output_xml_path=target_file)
+
+        add_missing_new_line_at_end_of(target_file)
 
         fix_loco_header(target_file)
-        if len(target_ids) > 0:
-            remove_unwanted_ids(target_file, target_ids)
 
     print("String resources updated")
 
@@ -117,6 +118,58 @@ def join_to_string(item_list):
         return ',' + ','.join(f"!{item}" for item in item_list)
 
 
+def update_android_strings(current_xml_path, new_xml_path, selected_tags, output_xml_path):
+    """
+    :param selected_tags: If empty, all modifications will be applied
+    """
+
+    never_remove_ids = [
+        "appName",  # All apps
+        "notification_channel_id_draft_service",  # kMail
+        "notification_channel_id_general",  # kMail
+        "notification_channel_id_sync_messages_service"  # kMail
+    ]
+
+    ET.register_namespace('android', 'http://schemas.android.com/apk/res/android')
+    ET.register_namespace('tools', 'http://schemas.android.com/tools')
+    ET.register_namespace('app', 'http://schemas.android.com/apk/res-auto')
+
+    # Parse both XML files
+    tree_current = ET.parse(current_xml_path)
+    root_current = tree_current.getroot()
+
+    tree_new = ET.parse(new_xml_path)
+    root_new = tree_new.getroot()
+
+    # Convert selected_tags list to set for faster lookup
+    selected_tags_set = set(selected_tags)
+
+    # Remove all selected tags from the current root
+    for elem in list(root_current):
+        name = elem.get('name')
+        if (len(selected_tags) == 0 and name not in never_remove_ids) or name in selected_tags_set:
+            root_current.remove(elem)
+
+    # Insert selected tags in the order they appear in the new XML
+    for elem in root_new:
+        name = elem.get('name')
+        if len(selected_tags) == 0 or name in selected_tags_set:
+            root_current.append(elem)
+
+    # Separate translatable="false" tags (keep in original order)
+    non_translatable_elems = [e for e in root_current if e.get('translatable') == 'false']
+    translatable_elems = [e for e in root_current if e.get('translatable') != 'false']
+
+    # Sort only the translatable ones alphabetically by name
+    translatable_elems.sort(key=lambda e: e.get('name') or "")
+
+    # Combine back (non-translatable first, sorted translatable after)
+    root_current[:] = non_translatable_elems + translatable_elems
+
+    # Save the updated XML file
+    tree_current.write(output_xml_path, encoding="utf-8")
+
+
 def fix_xml_indent_of_file_to(target_file, indent_amount):
     """
     Parses an XML file, re-indents it with the given indentation amount,
@@ -130,6 +183,8 @@ def fix_xml_indent_of_file_to(target_file, indent_amount):
     ET.indent(tree, space=" " * indent_amount)
     tree.write(target_file, encoding="utf-8", xml_declaration=True)
 
+
+def add_missing_new_line_at_end_of(target_file):
     # It's ok to assume the file only contains characters in utf-8
     with open(target_file, "rb+") as f:
         f.seek(-1, 2)  # go to the last byte
@@ -141,33 +196,16 @@ def fix_loco_header(target_file):
     walker = HeaderDiffWalker()
     walker.run(target_file)
 
-    to_replace = "\n".join(walker.added_lines)
     replace_with = "\n".join(walker.removed_lines)
-    with open(target_file, "r+") as fd:
-        file_content = fd.read()
-        fixed_file = file_content.replace(to_replace, replace_with)
-        fd.seek(0)
-        fd.write(fixed_file)
 
+    with open(target_file, "r") as fd:
+        original_content = fd.read()
 
-def remove_unwanted_ids(target_file, target_ids):
-    walker = UnwantedIdsDiffWalker()
-    walker.run(target_file)
+    with open(target_file, "w") as fd:
+        fd.write(replace_with + "\n" + original_content)
 
-    with open(target_file, "r+") as fd:
-        lines = fd.readlines()
-        out = ""
-        for line in lines:
-            if any(line.startswith(added_line) for added_line in walker.added_lines):
-                should_keep = any((f'<string name="{target_id}"' in line) for target_id in target_ids)
-                if should_keep:
-                    out += line
-            else:
-                out += line
-
-        fd.seek(0)
-        fd.write(out)
-        fd.truncate()
+    if len(walker.added_lines) > 0:
+        print("Warning: When trying to bring back the previous header, an unexpected diff with added lines has been detected")
 
 
 class DiffWalker:
