@@ -130,6 +130,12 @@ def fix_xml_indent_of_file_to(target_file, indent_amount):
     ET.indent(tree, space=" " * indent_amount)
     tree.write(target_file, encoding="utf-8", xml_declaration=True)
 
+    # It's ok to assume the file only contains characters in utf-8
+    with open(target_file, "rb+") as f:
+        f.seek(-1, 2)  # go to the last byte
+        if f.read(1) != b'\n':  # check if it's not a newline
+            f.write(b'\n')  # add one if missing
+
 
 def fix_loco_header(target_file):
     walker = HeaderDiffWalker()
