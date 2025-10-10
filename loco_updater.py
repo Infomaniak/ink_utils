@@ -3,12 +3,14 @@ import shutil
 import subprocess
 import xml.etree.ElementTree as ET
 import zipfile
+from dataclasses import dataclass
 from enum import Enum
 
 import requests
 
 import config as config
 import loco_validator.validator as loco_validator
+from print_utils import color, Colors
 
 cwd = "/tmp/ink_archive"
 archive_name = "downloaded.zip"
@@ -58,6 +60,7 @@ def update_loco(target_ids, loco_update_strategy, input_feature_tag):
     os.chdir(project_root)
 
     # Copy the strings.xml files from the archive to the project's values folder
+    id_diffs = {}
     project_path = loco_update_strategy.copy_target_folder
     for value_folder in value_folders:
         target_file = f'{project_path}/{value_folder}/strings.xml'
@@ -67,8 +70,9 @@ def update_loco(target_ids, loco_update_strategy, input_feature_tag):
 
         drop_git_diffs_if_any(target_file)
 
-        update_android_strings(current_xml_path=target_file, new_xml_path=source_file, selected_tags=target_ids,
-                               output_xml_path=target_file)
+        id_diff = update_android_strings(current_xml_path=target_file, new_xml_path=source_file, selected_tags=target_ids,
+                                         output_xml_path=target_file)
+        id_diffs[get_ui_acronym(value_folder)] = id_diff
 
         add_missing_new_line_at_end_of(target_file)
 
@@ -78,6 +82,16 @@ def update_loco(target_ids, loco_update_strategy, input_feature_tag):
 
     shutil.rmtree(cwd)
     print("Deleting temporary downloaded strings resources")
+
+    # Print status of the imported project compared to the remote when selecting only certain ids by hand
+    if len(target_ids) > 0:
+        print("\nStatus compared to the remote")
+        all_equal = all(v == next(iter(id_diffs.values())) for v in id_diffs.values())
+        if all_equal:
+            print(next(iter(id_diffs.values())).get_ui_formatted_string())
+        else:
+            for language, diff in id_diffs.items():
+                print(f"[{language}]: {diff.get_ui_formatted_string()}")
 
     return True
 
@@ -128,14 +142,15 @@ def drop_git_diffs_if_any(target_file):
 def update_android_strings(current_xml_path, new_xml_path, selected_tags, output_xml_path):
     """
     :param selected_tags: If empty, all modifications will be applied
+    :return: Stat object containing info what differences have been observed
     """
 
-    never_remove_ids = [
+    never_remove_ids = {
         "appName",  # All apps
         "notification_channel_id_draft_service",  # kMail
         "notification_channel_id_general",  # kMail
         "notification_channel_id_sync_messages_service"  # kMail
-    ]
+    }
 
     ET.register_namespace('android', 'http://schemas.android.com/apk/res/android')
     ET.register_namespace('tools', 'http://schemas.android.com/tools')
@@ -176,6 +191,58 @@ def update_android_strings(current_xml_path, new_xml_path, selected_tags, output
     # Save the updated XML file
     tree_current.write(output_xml_path, encoding="utf-8")
 
+    return get_id_diffs(root_before=root_current, root_after=root_new, ignored_ids=never_remove_ids)
+
+
+def get_id_diffs(root_before, root_after, ignored_ids):
+    # Build lookup maps by name for both XML roots
+    current_map = {
+        elem.get('name'): (elem.text or "").strip()
+        for elem in root_before if elem.get('name')
+    }
+    new_map = {
+        elem.get('name'): (elem.text or "").strip()
+        for elem in root_after if elem.get('name')
+    }
+
+    current_names = set(current_map.keys())
+    new_names = set(new_map.keys())
+
+    # Compute sets
+    added_names = new_names - current_names
+    removed_names = current_names - new_names
+    common_names = current_names & new_names
+
+    # Exclude never_remove_ids
+    added_names -= ignored_ids
+    removed_names -= ignored_ids
+    common_names -= ignored_ids
+
+    # Compute updated (content-changed) entries
+    updated_names = {
+        name for name in common_names
+        if current_map[name] != new_map[name]
+    }
+
+    return IdDiff(
+        added=len(added_names),
+        removed=len(removed_names),
+        updated=len(updated_names),
+    )
+
+
+@dataclass
+class IdDiff:
+    added: int = 0
+    removed: int = 0
+    updated: int = 0
+
+    def get_ui_formatted_string(self):
+        to_add = color(self.added, Colors.green) if self.added > 0 else self.added
+        to_update = color(self.updated, Colors.blue) if self.added > 0 else self.updated
+        to_remove = color(self.removed, Colors.red) if self.added > 0 else self.removed
+        return f"To add: {to_add}, to updated: {to_update}, to remove: {to_remove}"
+
 
 def fix_xml_indent_of_file_to(target_file, indent_amount):
     """
@@ -189,6 +256,11 @@ def fix_xml_indent_of_file_to(target_file, indent_amount):
     tree = ET.parse(target_file)
     ET.indent(tree, space=" " * indent_amount)
     tree.write(target_file, encoding="utf-8", xml_declaration=True)
+
+
+def get_ui_acronym(value_folder):
+    parts = value_folder.split('-')
+    return parts[-1] if len(parts) > 1 else 'en'
 
 
 def add_missing_new_line_at_end_of(target_file):
