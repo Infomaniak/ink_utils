@@ -65,6 +65,8 @@ def update_loco(target_ids, loco_update_strategy, input_feature_tag):
 
         fix_xml_indent_of_file_to(source_file, 4)
 
+        drop_git_diffs_if_any(target_file)
+
         update_android_strings(current_xml_path=target_file, new_xml_path=source_file, selected_tags=target_ids,
                                output_xml_path=target_file)
 
@@ -116,6 +118,11 @@ def join_to_string(item_list):
         return ""
     else:
         return ',' + ','.join(f"!{item}" for item in item_list)
+
+
+def drop_git_diffs_if_any(target_file):
+    relative_path = target_file[len(project_root) + 1:]
+    subprocess.run(["git", "restore", "--", relative_path], cwd=project_root, check=True)
 
 
 def update_android_strings(current_xml_path, new_xml_path, selected_tags, output_xml_path):
