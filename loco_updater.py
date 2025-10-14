@@ -66,8 +66,6 @@ def update_loco(target_ids, loco_update_strategy, input_feature_tag):
         target_file = f'{project_path}/{value_folder}/strings.xml'
         source_file = f'{cwd}/{files[0]}/res/{value_folder}/strings.xml'
 
-        fix_xml_indent_of_file_to(source_file, 4)
-
         drop_git_diffs_if_any(target_file)
 
         id_diff = update_android_strings(current_xml_path=target_file, new_xml_path=source_file, selected_tags=target_ids,
@@ -242,20 +240,6 @@ class IdDiff:
         to_update = color(self.updated, Colors.blue) if self.added > 0 else self.updated
         to_remove = color(self.removed, Colors.red) if self.added > 0 else self.removed
         return f"To add: {to_add}, to updated: {to_update}, to remove: {to_remove}"
-
-
-def fix_xml_indent_of_file_to(target_file, indent_amount):
-    """
-    Parses an XML file, re-indents it with the given indentation amount,
-    and writes it back to the same file.
-
-    Args:
-        target_file (str | Path): Path to the XML file.
-        indent_amount (int): Number of spaces for indentation.
-    """
-    tree = ET.parse(target_file)
-    ET.indent(tree, space=" " * indent_amount)
-    tree.write(target_file, encoding="utf-8", xml_declaration=True)
 
 
 def get_ui_acronym(value_folder):
