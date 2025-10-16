@@ -96,7 +96,7 @@ def import_strings(args, loco_update_strategy, feature_tag):
 
 
 def login(args):
-    lg.login(args.add, args.web, args.from_email)
+    lg.login(args.add, args.web, args.from_email, args.manual)
 
 
 def force_dark_mode(args):
@@ -377,6 +377,8 @@ def define_commands(parser):
                               help="start login inputs from the webview")
     login_parser.add_argument("-e", "--from-email", action="store_true", default=False,
                               help="start login inputs from when the email field is focused")
+    login_parser.add_argument("-m", "--manual", action="store_true", default=False,
+                              help="skips the config and asks for id/pwd manually in the terminal")
     login_parser.set_defaults(func=login)
 
     # Dark mode

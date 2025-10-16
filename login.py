@@ -9,13 +9,13 @@ login_page_sleep_duration = 1.5
 login_device_id = None
 
 
-def login(skip_view_pager, from_web_view, already_in_email):
+def login(skip_view_pager, from_web_view, already_in_email, manual_login):
     login = config.get_global("login", "id", raise_error=False)
-    if login is None:
+    if login is None or manual_login:
         login = input("Email:")
 
     pwd = config.get_global("login", "pwd", raise_error=False)
-    if pwd is None:
+    if pwd is None or manual_login:
         pwd = getpass.getpass()
 
     global login_device_id
