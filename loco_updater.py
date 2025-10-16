@@ -18,6 +18,13 @@ value_folders = ['values', 'values-de', 'values-es', 'values-fr', 'values-it']
 
 project_root = config.get_project("global", "project_root")
 
+ignored_ids = {
+    "appName",  # All apps
+    "notification_channel_id_draft_service",  # kMail
+    "notification_channel_id_general",  # kMail
+    "notification_channel_id_sync_messages_service"  # kMail
+}
+
 
 class LocoUpdateStrategy:
     def __init__(self, api_key, copy_target_folder):
@@ -25,7 +32,7 @@ class LocoUpdateStrategy:
         self.copy_target_folder = copy_target_folder
 
 
-def update_loco(target_ids, loco_update_strategy, input_feature_tag):
+def download_strings(loco_update_strategy, input_feature_tag):
     loco_key = loco_update_strategy.api_key
     android_tag = "android"
     main_tag_to_query = android_tag
@@ -47,7 +54,7 @@ def update_loco(target_ids, loco_update_strategy, input_feature_tag):
 
     archive_path = download_zip(main_tag_to_query, loco_key, tags_to_filter_out)
     if archive_path is None:
-        return False
+        return None
 
     print("String resources downloaded successfully")
 
@@ -57,41 +64,55 @@ def update_loco(target_ids, loco_update_strategy, input_feature_tag):
     os.chdir(cwd)
     files = [file for file in os.listdir('.') if file != archive_name]
 
+    return files[0]  # The path of the extracted zip's first contained directory
+
+
+def update_loco(target_ids, loco_update_strategy, extracted_dir_root):
     os.chdir(project_root)
 
     # Copy the strings.xml files from the archive to the project's values folder
-    id_diffs = {}
     project_path = loco_update_strategy.copy_target_folder
     for value_folder in value_folders:
         target_file = f'{project_path}/{value_folder}/strings.xml'
-        source_file = f'{cwd}/{files[0]}/res/{value_folder}/strings.xml'
+        source_file = f'{cwd}/{extracted_dir_root}/res/{value_folder}/strings.xml'
 
         drop_git_diffs_if_any(target_file)
-
-        id_diff = update_android_strings(current_xml_path=target_file, new_xml_path=source_file, selected_tags=target_ids,
-                                         output_xml_path=target_file)
-        id_diffs[get_ui_acronym(value_folder)] = id_diff
-
+        update_android_strings(current_xml_path=target_file, new_xml_path=source_file, selected_tags=target_ids,
+                               output_xml_path=target_file)
         add_missing_new_line_at_end_of(target_file)
-
         fix_loco_header(target_file)
 
     print("String resources updated")
 
+
+def remove_downloaded_strings():
     shutil.rmtree(cwd)
     print("Deleting temporary downloaded strings resources")
 
-    # Print status of the imported project compared to the remote when selecting only certain ids by hand
-    if len(target_ids) > 0:
-        print("\nStatus compared to the remote")
-        all_equal = all(v == next(iter(id_diffs.values())) for v in id_diffs.values())
-        if all_equal:
-            print(next(iter(id_diffs.values())).get_ui_formatted_string())
-        else:
-            for language, diff in id_diffs.items():
-                print(f"[{language}]: {diff.get_ui_formatted_string()}")
 
-    return True
+def compute_project_diffs(loco_update_strategy, extracted_dir_root):
+    # needs_to_print_diffs = len(target_ids) > 0 or only_display_diff
+    project_path = loco_update_strategy.copy_target_folder
+
+    id_diffs = {}
+    for value_folder in value_folders:
+        # TODO: Factorize
+        target_file = f'{project_path}/{value_folder}/strings.xml'
+        source_file = f'{cwd}/{extracted_dir_root}/res/{value_folder}/strings.xml'
+
+        id_diffs[get_ui_acronym_of(value_folder)] = compute_file_diffs(target_file, source_file)
+
+    pretty_print_diff(id_diffs)
+
+
+def pretty_print_diff(id_diffs):
+    print("\nStatus compared to the remote")
+    all_equal = all(v == next(iter(id_diffs.values())) for v in id_diffs.values())
+    if all_equal:
+        print(next(iter(id_diffs.values())).get_ui_formatted_string())
+    else:
+        for language, diff in id_diffs.items():
+            print(f"[{language}]: {diff.get_ui_formatted_string()}")
 
 
 def list_tags(loco_key):
@@ -143,13 +164,6 @@ def update_android_strings(current_xml_path, new_xml_path, selected_tags, output
     :return: Stat object containing info what differences have been observed
     """
 
-    never_remove_ids = {
-        "appName",  # All apps
-        "notification_channel_id_draft_service",  # kMail
-        "notification_channel_id_general",  # kMail
-        "notification_channel_id_sync_messages_service"  # kMail
-    }
-
     ET.register_namespace('android', 'http://schemas.android.com/apk/res/android')
     ET.register_namespace('tools', 'http://schemas.android.com/tools')
     ET.register_namespace('app', 'http://schemas.android.com/apk/res-auto')
@@ -167,7 +181,7 @@ def update_android_strings(current_xml_path, new_xml_path, selected_tags, output
     # Remove all selected tags from the current root
     for elem in list(root_current):
         name = elem.get('name')
-        if (len(selected_tags) == 0 and name not in never_remove_ids) or name in selected_tags_set:
+        if (len(selected_tags) == 0 and name not in ignored_ids) or name in selected_tags_set:
             root_current.remove(elem)
 
     # Insert selected tags in the order they appear in the new XML
@@ -189,10 +203,12 @@ def update_android_strings(current_xml_path, new_xml_path, selected_tags, output
     # Save the updated XML file
     tree_current.write(output_xml_path, encoding="utf-8")
 
-    return get_id_diffs(root_before=root_current, root_after=root_new, ignored_ids=never_remove_ids)
+
+def compute_file_diffs(old_file, new_file):
+    return get_id_diffs(root_before=ET.parse(old_file).getroot(), root_after=ET.parse(new_file).getroot())
 
 
-def get_id_diffs(root_before, root_after, ignored_ids):
+def get_id_diffs(root_before, root_after):
     # Build lookup maps by name for both XML roots
     current_map = {
         elem.get('name'): (elem.text or "").strip()
@@ -218,8 +234,7 @@ def get_id_diffs(root_before, root_after, ignored_ids):
 
     # Compute updated (content-changed) entries
     updated_names = {
-        name for name in common_names
-        if current_map[name] != new_map[name]
+        name for name in common_names if current_map[name] != new_map[name]
     }
 
     return IdDiff(
@@ -242,7 +257,7 @@ class IdDiff:
         return f"To add: {to_add}, to updated: {to_update}, to remove: {to_remove}"
 
 
-def get_ui_acronym(value_folder):
+def get_ui_acronym_of(value_folder):
     parts = value_folder.split('-')
     return parts[-1] if len(parts) > 1 else 'en'
 

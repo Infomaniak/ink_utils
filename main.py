@@ -7,6 +7,7 @@ import pathlib
 import signal
 import subprocess
 import sys
+from contextlib import contextmanager
 
 import config
 import database as db
@@ -73,26 +74,57 @@ def update_loco_core(args):
 
 
 def import_strings(args, loco_update_strategy, feature_tag):
-    if not args.check:
-        successfully_updated = lu.update_loco(args.target_ids, loco_update_strategy, feature_tag)
-        if not successfully_updated:
-            exit(1)
+    @contextmanager
+    def download_resources():
+        try:
+            extracted_dir_root = lu.download_strings(loco_update_strategy, feature_tag)
+            if None:
+                exit(1)
+
+            yield extracted_dir_root
+        finally:
+            lu.remove_downloaded_strings()
+
+    def update_resources(extracted_dir_root):
+        lu.update_loco(args.target_ids, loco_update_strategy, extracted_dir_root)
+
+    def compute_diffs(extracted_dir_root):
+        lu.compute_project_diffs(loco_update_strategy, extracted_dir_root)
         print()
 
-    print("Searching for errors in imported strings")
-    error_count = lu.validate_strings(loco_update_strategy)
-    if error_count == 0:
-        print("Found no error")
-    else:
-        accord = "s" if error_count > 1 else ""
-        print(f"\nFound {error_count} error{accord}")
-        if args.verbose:
-            print("\n[verbose]")
-            print("To fix this issue:")
-            print("  • Correct the strings and re-import translations into the project.")
-            print("  • If this is a false positive, add the string ID as an exception in loco_validator/validator.py, "
-                  "then confirm with the project maintainers.")
-        exit(1)
+    def check_resources():
+        print("\nSearching for errors in imported strings")
+        error_count = lu.validate_strings(loco_update_strategy)
+        if error_count == 0:
+            print("Found no error")
+        else:
+            accord = "s" if error_count > 1 else ""
+            print(f"\nFound {error_count} error{accord}")
+            if args.verbose:
+                print("\n[verbose]")
+                print("To fix this issue:")
+                print("  • Correct the strings and re-import translations into the project.")
+                print("  • If this is a false positive, add the string ID as an exception in loco_validator/validator.py, "
+                      "then confirm with the project maintainers.")
+            exit(1)
+
+    # Determine what operations we need
+    is_default_case = not args.diff and not args.check  # The default case with no args
+    needs_download = is_default_case or args.diff
+    needs_update = is_default_case
+    needs_check = is_default_case or args.check
+    needs_diff = (is_default_case and args.target_ids is not None and len(args.target_ids) > 0) \
+                 or args.diff  # In default case only if a tag has been provided
+
+    if needs_download:
+        with download_resources() as downloaded_folder:
+            if needs_update:
+                update_resources(downloaded_folder)
+            if needs_diff:
+                compute_diffs(downloaded_folder)
+
+    if needs_check:
+        check_resources()
 
 
 def login(args):
@@ -355,6 +387,8 @@ def define_commands(parser):
     def add_loco_arguments(parser):
         parser.add_argument("-c", "--check", action="store_true", default=False,
                             help="only checks if strings in the project are correctly formatted but do not import")
+        parser.add_argument("-d", "--diff", action="store_true", default=False,
+                            help="only prints differences between local version and remote")
         parser.add_argument("-v", "--verbose", action="store_true", default=False,
                             help="details steps to solve the issue")
         parser.add_argument("-t", "--tag", dest="tag", help="only pull strings from this tag")
