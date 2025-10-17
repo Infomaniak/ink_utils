@@ -340,12 +340,19 @@ def set_airplane_mode(enabled_or_disabled, device_id):
 
 
 def bump_core(args):
-    project_git_path = config.get_project("global", "project_root") + "/.."
-
-    if args.commit_message is None:
-        subprocess.run((config.script_folder + "/bump_core.sh", args.core_branch_name), cwd=project_git_path)
+    if len(args.projects) > 0:
+        project_git_paths = [config.manually_get_project(project, "global", "project_root") + "/.." for project in args.projects]
     else:
-        subprocess.run((config.script_folder + "/bump_core.sh", args.core_branch_name, args.commit_message), cwd=project_git_path)
+        project_git_paths = [config.get_project("global", "project_root") + "/.."]
+
+    for project_git_path in project_git_paths:
+        print(f"\nProcessing project {project_git_path}")
+        if args.commit_message is None:
+            subprocess.run((config.script_folder + "/bump_core.sh", args.core_branch_name), cwd=project_git_path)
+        else:
+            subprocess.run((config.script_folder + "/bump_core.sh", args.core_branch_name, args.commit_message),
+                           cwd=project_git_path)
+        print()
 
 
 def signal_handler(sig, frame):
@@ -557,9 +564,11 @@ def define_commands(parser):
 
     # Automatically creates a PR to bump core
     bump_core_parser = subparsers.add_parser("bumpcore",
-                                               help="create a branch on current project which bumps core to target core branch")
+                                             help="create a branch on current project which bumps core to target core branch")
     bump_core_parser.add_argument("core_branch_name", help="core branch name that you want to update to")
     bump_core_parser.add_argument("commit_message", nargs="?", help="specify the commit message to use")
+    bump_core_parser.add_argument("-p", "--projects", nargs="+",
+                                  help="specify one or more project keyword names to handle (e.g. 'api web backend')")
     bump_core_parser.set_defaults(func=bump_core)
 
 
