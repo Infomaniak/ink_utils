@@ -237,8 +237,8 @@ class IdDiff:
 
     def get_ui_formatted_string(self):
         to_add = color(self.added, Colors.green) if self.added > 0 else self.added
-        to_update = color(self.updated, Colors.blue) if self.added > 0 else self.updated
-        to_remove = color(self.removed, Colors.red) if self.added > 0 else self.removed
+        to_update = color(self.updated, Colors.blue) if self.updated > 0 else self.updated
+        to_remove = color(self.removed, Colors.red) if self.removed > 0 else self.removed
         return f"To add: {to_add}, to updated: {to_update}, to remove: {to_remove}"
 
 
