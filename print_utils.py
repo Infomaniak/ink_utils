@@ -6,7 +6,7 @@ def rainbow_print(string):
         Colors.green,
         Colors.blue,
         Colors.purple,
-        Colors.white,
+        None,
     ]
 
     color_count = len(colors)
@@ -19,9 +19,12 @@ def rainbow_print(string):
 
 
 def color(text, rgb):
-    return "\033[38;2;{};{};{}m{}\033[0m".format(
-        str(rgb[0]), str(rgb[1]), str(rgb[2]), text
-    )
+    if rgb is None:
+        return text
+    else:
+        return "\033[38;2;{};{};{}m{}\033[0m".format(
+            str(rgb[0]), str(rgb[1]), str(rgb[2]), text
+        )
 
 
 class Colors:

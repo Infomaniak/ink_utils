@@ -23,6 +23,22 @@ from updater import check_for_updates, rm_cache as update_rm_cache, update_git_p
 from utils import select_in_list, accept_substitution, ink_folder, cancel_ink_command
 
 
+def show_version(args):
+    cwd = config.script_folder
+    branch = subprocess.run(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+        capture_output=True, text=True, check=True, cwd=cwd
+    ).stdout.strip()
+
+    result = subprocess.run(
+        ["git", "rev-list", "--count", branch],
+        capture_output=True, text=True, check=True, cwd=cwd
+    )
+    commit_count = int(result.stdout.strip()) + 1  # +1 to include the first commit itself
+
+    print("Version", commit_count)
+
+
 def generate_eml(args):
     html = accept_substitution(args.html)
     ew.new_eml(args.subject, args.sender, args.to, args.cc, args.with_date, html)
@@ -353,6 +369,10 @@ def define_commands(parser):
     db_clear_parser.set_defaults(func=db.clear_mail_db)
     db_open_parser = db_subparser.add_parser("open", help="pulls and open a db file")
     db_open_parser.set_defaults(func=db.open_db)
+
+    # Show amount of commits on main
+    version_parse = subparsers.add_parser("version", help="shows the current version as the number of commits on origin/main")
+    version_parse.set_defaults(func=show_version)
 
     # Show layout bounds
     bounds_parser = subparsers.add_parser("bounds", help="toggles layout bounds for the android device using adb")
