@@ -554,6 +554,8 @@ def define_commands(parser):
     release_subparser = release_parser.add_subparsers(help="release help")
 
     build_parser = release_subparser.add_parser("build", help="builds project")
+    build_parser.add_argument("-v", "--verbose", action="store_true", default=False,
+                              help="show build and signing terminal stdout and stderr")
     build_parser.set_defaults(func=release_build.build)
 
     bump_parser = release_subparser.add_parser("bump", help="builds project")

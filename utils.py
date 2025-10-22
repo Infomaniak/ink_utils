@@ -15,11 +15,11 @@ CLASS_NAME = "InkTheme"
 CurrentInkTheme = DefaultTheme
 
 
-def run(cmd, cwd=None, hide_output=True):
+def run(cmd, cwd=None, show_output=False):
     """Run a shell command with output streaming and error checking."""
     print(f"\nRunning: {' '.join(cmd)}")
 
-    result = subprocess.run(cmd, cwd=cwd, text=True, capture_output=hide_output)
+    result = subprocess.run(cmd, cwd=cwd, text=True, capture_output=not show_output)
 
     if result.returncode != 0:
         raise RuntimeError(f"Command failed: {' '.join(cmd)} with cwd: {cwd}")

@@ -4,6 +4,7 @@ mail:
     build:
         keystore_path: /Users/.../keystores/key.jks
         key_alias: MyFavoriteKey
+        build_task: bundleStandardRelease
     global:
         package_name: com.infomaniak.mail
         project_root: /Users/.../android-mail/app
