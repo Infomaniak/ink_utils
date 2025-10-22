@@ -17,6 +17,8 @@ import loco_updater as lu
 import login as lg
 import navbar_mode
 import projects
+import release_build
+import release_bump
 from adb import adb, select_device, close_app, open_app, select_device_or_all, warn_if_current_project_app_is_not_focused
 from adb_prop import show_layout_bounds, show_layout_bars
 from updater import check_for_updates, rm_cache as update_rm_cache, update_git_project, update_cmd
@@ -545,6 +547,18 @@ def define_commands(parser):
     navbar_mode_parser.add_argument("mode", type=navbar_mode.NavbarMode.from_string, choices=list(navbar_mode.NavbarMode))
     add_all_device_arg(navbar_mode_parser)
     navbar_mode_parser.set_defaults(func=navbar_mode.set_navbar_mode)
+
+    # Release project
+    release_parser = subparsers.add_parser("release", help="set the navigation bar style between 3 buttons and gestures")
+    release_parser.set_defaults(func=catch_empty_calls)
+    release_subparser = release_parser.add_subparsers(help="release help")
+
+    build_parser = release_subparser.add_parser("build", help="builds project")
+    build_parser.set_defaults(func=release_build.build)
+
+    bump_parser = release_subparser.add_parser("bump", help="builds project")
+    bump_parser.add_argument("type", type=release_bump.BumpType.from_string, choices=list(release_bump.BumpType))
+    bump_parser.set_defaults(func=release_bump.bump)
 
 
 if __name__ == '__main__':

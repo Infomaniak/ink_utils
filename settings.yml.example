@@ -1,6 +1,9 @@
 mail:
     loco:
         loco_key: XXX
+    build:
+        keystore_path: /Users/.../keystores/key.jks
+        key_alias: MyFavoriteKey
     global:
         package_name: com.infomaniak.mail
         project_root: /Users/.../android-mail/app

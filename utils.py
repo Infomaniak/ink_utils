@@ -1,6 +1,7 @@
 import importlib.util
 import os
 import random
+import subprocess
 import sys
 
 import inquirer
@@ -12,6 +13,19 @@ ink_folder = os.path.abspath(os.path.dirname(__file__))
 CUSTOM_CLASS_FILE = ink_folder + "/inquirer_theme.py"
 CLASS_NAME = "InkTheme"
 CurrentInkTheme = DefaultTheme
+
+
+def run(cmd, cwd=None, hide_output=True):
+    """Run a shell command with output streaming and error checking."""
+    print(f"\nRunning: {' '.join(cmd)}")
+
+    result = subprocess.run(cmd, cwd=cwd, text=True, capture_output=hide_output)
+
+    if result.returncode != 0:
+        raise RuntimeError(f"Command failed: {' '.join(cmd)} with cwd: {cwd}")
+
+    print("Done.")
+
 
 if os.path.isfile(CUSTOM_CLASS_FILE):
     spec = importlib.util.spec_from_file_location("inquirer_theme", CUSTOM_CLASS_FILE)
