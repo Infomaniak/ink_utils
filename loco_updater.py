@@ -22,7 +22,10 @@ ignored_ids = {
     "appName",  # All apps
     "notification_channel_id_draft_service",  # kMail
     "notification_channel_id_general",  # kMail
-    "notification_channel_id_sync_messages_service"  # kMail
+    "notification_channel_id_sync_messages_service",  # kMail
+    "matomo",  # SwissTransfer
+    "sentry",  # SwissTransfer
+    "notifications_upload_channel_id",  # SwissTransfer
 }
 
 
