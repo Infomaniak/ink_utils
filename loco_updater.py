@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 import zipfile
 from dataclasses import dataclass
 from enum import Enum
+from xml.dom import minidom
 
 import requests
 
@@ -12,8 +13,7 @@ import config as config
 import loco_validator.validator as loco_validator
 from print_utils import color, Colors
 
-cwd = "/tmp/ink_archive"
-archive_name = "downloaded.zip"
+loco_tmp_dir = "/tmp/ink_archive"
 value_folders = ['values', 'values-de', 'values-es', 'values-fr', 'values-it']
 
 project_root = config.get_project("global", "project_root")
@@ -37,37 +37,109 @@ class LocoUpdateStrategy:
 
 def download_strings(loco_update_strategy, input_feature_tag):
     loco_key = loco_update_strategy.api_key
-    android_tag = "android"
-    main_tag_to_query = android_tag
-    feature_tag = input_feature_tag or config.get_project("loco", "tag", raise_error=False)
-
-    tags_to_filter_out = None
-    if not (feature_tag is None):
-        tags = list_tags(loco_key)
-        tags.remove(android_tag)
-        tags.remove("ios")
-        tags.remove("ios-stringsdict")
-        tags.remove(feature_tag)
-        tags_to_filter_out = tags
-        main_tag_to_query = feature_tag
+    tag = input_feature_tag or config.get_project("loco", "tag", raise_error=False)
+    is_tag_provided = tag is not None
 
     # Remove ink's tmp folder if it exists because the rest of the code relies on no other files being present
-    if os.path.exists(cwd):
-        shutil.rmtree(cwd)
+    if os.path.exists(loco_tmp_dir):
+        shutil.rmtree(loco_tmp_dir)
 
-    archive_path = download_zip(main_tag_to_query, loco_key, tags_to_filter_out)
-    if archive_path is None:
+    android_archive_name = "android.zip"
+    android_archive_path = download_zip(tag="android", loco_key=loco_key, archive_name=android_archive_name)
+    if android_archive_path is None:
         return None
+
+    if is_tag_provided:
+        tag_archive_name = "tag.zip"
+        tag_archive_path = download_zip(tag=tag, loco_key=loco_key, archive_name=tag_archive_name)
+        if tag_archive_path is None:
+            return None
 
     print("String resources downloaded successfully")
 
-    with zipfile.ZipFile(archive_path, 'r') as zip_ref:
-        zip_ref.extractall(cwd)
+    # TODO: Extract to separate folders
+    android_extraction_folder = loco_tmp_dir + "/android"
+    with zipfile.ZipFile(android_archive_path, 'r') as zip_ref:
+        zip_ref.extractall(android_extraction_folder)
 
-    os.chdir(cwd)
-    files = [file for file in os.listdir('.') if file != archive_name]
+    if is_tag_provided:
+        tag_extraction_folder = loco_tmp_dir + "/tag"
+        with zipfile.ZipFile(tag_archive_path, 'r') as zip_ref:
+            zip_ref.extractall(tag_extraction_folder)
 
-    return files[0]  # The path of the extracted zip's first contained directory
+        output_res_folder = f"{loco_tmp_dir}/merged/res"
+        compute_union_of_res_folders(android_res_folder=get_res_folder_path(android_extraction_folder),
+                                     tag_res_folder=get_res_folder_path(tag_extraction_folder),
+                                     output_res_folder=output_res_folder)
+    else:
+        output_res_folder = get_res_folder_path(android_extraction_folder)
+
+    return output_res_folder  # The path of the res directory
+
+
+def get_res_folder_path(archive_path):
+    return archive_path + "/" + [file for file in os.listdir(archive_path)][0] + "/res"
+
+
+def compute_union_of_res_folders(android_res_folder, tag_res_folder, output_res_folder):
+    for folder in value_folders:
+        android_xml = f"{android_res_folder}/{folder}/strings.xml"
+        tag_xml = f"{tag_res_folder}/{folder}/strings.xml"
+        output = f"{output_res_folder}/{folder}/strings.xml"
+        compute_union_to(android_xml, tag_xml, output)
+
+
+def compute_union_to(first_xml, second_xml, output_file_path):
+    """
+    Computes the intersection (common keys) of two Android strings XML files and
+    writes them to the output file. If the output file does not exist, it is created.
+
+    :param first_xml: Path to the first XML file
+    :param second_xml: Path to the second XML file
+    :param output_file_path: Path to the output XML file
+    """
+
+    # Register Android XML namespaces to preserve them in output
+    ET.register_namespace('android', 'http://schemas.android.com/apk/res/android')
+    ET.register_namespace('tools', 'http://schemas.android.com/tools')
+    ET.register_namespace('app', 'http://schemas.android.com/apk/res-auto')
+
+    # Parse input XMLs
+    tree_first = ET.parse(first_xml)
+    root_first = tree_first.getroot()
+
+    tree_second = ET.parse(second_xml)
+    root_second = tree_second.getroot()
+
+    # Build dicts of name -> element for quick lookup
+    first_dict = {elem.get('name'): elem for elem in root_first if elem.get('name')}
+    second_dict = {elem.get('name'): elem for elem in root_second if elem.get('name')}
+
+    # Compute intersection of keys
+    common_keys = set(first_dict.keys()) & set(second_dict.keys())
+
+    # Prepare new XML root (resources)
+    root_output = ET.Element("resources")
+
+    # Add only elements with names present in both files (preserve order from first file)
+    for key in sorted(common_keys):
+        # We can take the element from the first or second file — usually they are similar.
+        # Deep copy to avoid shared references
+        elem = ET.Element(first_dict[key].tag, first_dict[key].attrib)
+        elem.text = first_dict[key].text
+        root_output.append(elem)
+
+    # Pretty-print output using minidom
+    rough_string = ET.tostring(root_output, encoding="utf-8")
+    reparsed = minidom.parseString(rough_string)
+    pretty_xml = reparsed.toprettyxml(indent="    ", encoding="utf-8")
+
+    # Ensure directory exists
+    os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
+
+    # Write to file
+    with open(output_file_path, "wb") as f:
+        f.write(pretty_xml)
 
 
 def update_loco(target_ids, loco_update_strategy, extracted_dir_root):
@@ -77,7 +149,7 @@ def update_loco(target_ids, loco_update_strategy, extracted_dir_root):
     project_path = loco_update_strategy.copy_target_folder
     for value_folder in value_folders:
         target_file = f'{project_path}/{value_folder}/strings.xml'
-        source_file = f'{cwd}/{extracted_dir_root}/res/{value_folder}/strings.xml'
+        source_file = f'{extracted_dir_root}/{value_folder}/strings.xml'
 
         drop_git_diffs_if_any(target_file)
         update_android_strings(current_xml_path=target_file, new_xml_path=source_file, selected_tags=target_ids,
@@ -89,7 +161,7 @@ def update_loco(target_ids, loco_update_strategy, extracted_dir_root):
 
 
 def remove_downloaded_strings():
-    shutil.rmtree(cwd)
+    shutil.rmtree(loco_tmp_dir)
     print("Deleting temporary downloaded strings resources")
 
 
@@ -101,7 +173,7 @@ def compute_project_diffs(loco_update_strategy, extracted_dir_root):
     for value_folder in value_folders:
         # TODO: Factorize
         target_file = f'{project_path}/{value_folder}/strings.xml'
-        source_file = f'{cwd}/{extracted_dir_root}/res/{value_folder}/strings.xml'
+        source_file = f'{extracted_dir_root}/{value_folder}/strings.xml'
 
         id_diffs[get_ui_acronym_of(value_folder)] = compute_file_diffs(target_file, source_file)
 
@@ -118,22 +190,8 @@ def pretty_print_diff(id_diffs):
             print(f"[{language}]: {diff.get_ui_formatted_string()}")
 
 
-def list_tags(loco_key):
-    api_url = "https://localise.biz/api/tags"
-    headers = {"Authorization": f"Loco {loco_key}"}
-    response = requests.get(api_url, headers=headers)
-
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return None
-
-
-def download_zip(main_tag, loco_key, tags_to_filter_out):
-    negative_tags_query = join_to_string(tags_to_filter_out)
-    zip_url = f"https://localise.biz/api/export/archive/xml.zip?format=android&filter=${main_tag}${negative_tags_query}&fallback=en&order=id&key={loco_key}"
-
-    archive_path = cwd + "/" + archive_name
+def download_zip(tag, loco_key, archive_name):
+    zip_url = f"https://localise.biz/api/export/archive/xml.zip?format=android&filter=${tag}&fallback=en&order=id&key={loco_key}"
 
     response = requests.get(zip_url)
 
@@ -141,8 +199,9 @@ def download_zip(main_tag, loco_key, tags_to_filter_out):
         print("Error: When trying to download translations received response.status_code =", response.status_code)
         return None
 
-    os.makedirs(cwd, exist_ok=True)
+    os.makedirs(loco_tmp_dir, exist_ok=True)
 
+    archive_path = loco_tmp_dir + "/" + archive_name
     with open(archive_path, "wb+") as f:
         f.write(response.content)
 
