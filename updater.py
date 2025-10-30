@@ -80,6 +80,7 @@ def check_for_updates(raw_args):
 def update_git_project():
     if does_current_branch_target_main():
         run_git_local_cmd("git pull")
+        run_git_local_cmd("git submodule update --init --recursive -- loco_validator")
     else:
         print("Your current branch does not target main")
 
