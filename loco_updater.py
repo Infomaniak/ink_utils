@@ -1,3 +1,4 @@
+import copy
 import os
 import shutil
 import subprocess
@@ -5,7 +6,6 @@ import xml.etree.ElementTree as ET
 import zipfile
 from dataclasses import dataclass
 from enum import Enum
-from xml.dom import minidom
 
 import requests
 
@@ -110,31 +110,24 @@ def compute_union_to(first_xml, second_xml, output_file_path):
     first_dict = {elem.get('name'): elem for elem in root_first if elem.get('name')}
     second_dict = {elem.get('name'): elem for elem in root_second if elem.get('name')}
 
-    # Compute intersection of keys
+    # Intersection of keys present in both files
     common_keys = set(first_dict.keys()) & set(second_dict.keys())
 
-    # Prepare new XML root (resources)
     root_output = ET.Element("resources")
 
-    # Add only elements with names present in both files (preserve order from first file)
-    for key in sorted(common_keys):
-        # We can take the element from the first or second file — usually they are similar.
-        # Deep copy to avoid shared references
-        elem = ET.Element(first_dict[key].tag, first_dict[key].attrib)
-        elem.text = first_dict[key].text
-        root_output.append(elem)
+    # Add elements (preserves plurals and nested items)
+    for elem in root_first:
+        name = elem.get('name')
+        if name and name in common_keys:
+            root_output.append(copy.deepcopy(elem))
 
-    # Pretty-print output using minidom
-    rough_string = ET.tostring(root_output, encoding="utf-8")
-    reparsed = minidom.parseString(rough_string)
-    pretty_xml = reparsed.toprettyxml(indent="    ", encoding="utf-8")
+    tree_output = ET.ElementTree(root_output)
+    ET.indent(tree_output, space="    ", level=0)
 
     # Ensure directory exists
     os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
 
-    # Write to file
-    with open(output_file_path, "wb") as f:
-        f.write(pretty_xml)
+    tree_output.write(output_file_path, encoding="utf-8", xml_declaration=True)
 
 
 def register_android_xml_namespaces():
