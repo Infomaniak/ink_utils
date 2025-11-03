@@ -57,7 +57,6 @@ def download_strings(loco_update_strategy, input_feature_tag):
 
     print("String resources downloaded successfully")
 
-    # TODO: Extract to separate folders
     android_extraction_folder = loco_tmp_dir + "/android"
     with zipfile.ZipFile(android_archive_path, 'r') as zip_ref:
         zip_ref.extractall(android_extraction_folder)
@@ -98,11 +97,7 @@ def compute_union_to(first_xml, second_xml, output_file_path):
     :param second_xml: Path to the second XML file
     :param output_file_path: Path to the output XML file
     """
-
-    # Register Android XML namespaces to preserve them in output
-    ET.register_namespace('android', 'http://schemas.android.com/apk/res/android')
-    ET.register_namespace('tools', 'http://schemas.android.com/tools')
-    ET.register_namespace('app', 'http://schemas.android.com/apk/res-auto')
+    register_android_xml_namespaces()
 
     # Parse input XMLs
     tree_first = ET.parse(first_xml)
@@ -140,6 +135,13 @@ def compute_union_to(first_xml, second_xml, output_file_path):
     # Write to file
     with open(output_file_path, "wb") as f:
         f.write(pretty_xml)
+
+
+def register_android_xml_namespaces():
+    """Register Android XML namespaces to preserve them in output"""
+    ET.register_namespace('android', 'http://schemas.android.com/apk/res/android')
+    ET.register_namespace('tools', 'http://schemas.android.com/tools')
+    ET.register_namespace('app', 'http://schemas.android.com/apk/res-auto')
 
 
 def update_loco(target_ids, loco_update_strategy, extracted_dir_root):
@@ -225,10 +227,7 @@ def update_android_strings(current_xml_path, new_xml_path, selected_tags, output
     :param selected_tags: If empty, all modifications will be applied
     :return: Stat object containing info what differences have been observed
     """
-
-    ET.register_namespace('android', 'http://schemas.android.com/apk/res/android')
-    ET.register_namespace('tools', 'http://schemas.android.com/tools')
-    ET.register_namespace('app', 'http://schemas.android.com/apk/res-auto')
+    register_android_xml_namespaces()
 
     # Parse both XML files
     tree_current = ET.parse(current_xml_path)
