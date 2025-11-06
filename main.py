@@ -17,6 +17,7 @@ import font_size
 import loco_updater as lu
 import login as lg
 import navbar_mode
+import new_module
 import projects
 from adb import adb, select_device, close_app, open_app, select_device_or_all, warn_if_current_project_app_is_not_focused
 from adb_prop import show_layout_bounds, show_layout_bars
@@ -575,6 +576,12 @@ def define_commands(parser):
     bump_core_parser.add_argument("commit_message", nargs="?", help="specify the commit message to use")
     add_project_arg(bump_core_parser)
     bump_core_parser.set_defaults(func=bump_core)
+
+    # Create new module
+    new_module_parser = subparsers.add_parser("newmodule", help="create new module")
+    new_module_parser.add_argument("module_name", nargs="?", help="the name of the module to create")
+    new_module_parser.add_argument("package_name", nargs="?", help="the name of the package to use for the module")
+    new_module_parser.set_defaults(func=new_module.new_module)
 
     # Add lines needed for preprod cross app login to work
     new_module_parser = subparsers.add_parser("crossapplogin",
