@@ -67,9 +67,9 @@ def download_strings(loco_update_strategy, input_feature_tag):
             zip_ref.extractall(tag_extraction_folder)
 
         output_res_folder = f"{loco_tmp_dir}/merged/res"
-        compute_union_of_res_folders(android_res_folder=get_res_folder_path(android_extraction_folder),
-                                     tag_res_folder=get_res_folder_path(tag_extraction_folder),
-                                     output_res_folder=output_res_folder)
+        compute_intersection_of_res_folders(android_res_folder=get_res_folder_path(android_extraction_folder),
+                                            tag_res_folder=get_res_folder_path(tag_extraction_folder),
+                                            output_res_folder=output_res_folder)
     else:
         output_res_folder = get_res_folder_path(android_extraction_folder)
 
@@ -80,15 +80,15 @@ def get_res_folder_path(archive_path):
     return archive_path + "/" + [file for file in os.listdir(archive_path)][0] + "/res"
 
 
-def compute_union_of_res_folders(android_res_folder, tag_res_folder, output_res_folder):
+def compute_intersection_of_res_folders(android_res_folder, tag_res_folder, output_res_folder):
     for folder in value_folders:
         android_xml = f"{android_res_folder}/{folder}/strings.xml"
         tag_xml = f"{tag_res_folder}/{folder}/strings.xml"
         output = f"{output_res_folder}/{folder}/strings.xml"
-        compute_union_to(android_xml, tag_xml, output)
+        compute_intersection_to(android_xml, tag_xml, output)
 
 
-def compute_union_to(first_xml, second_xml, output_file_path):
+def compute_intersection_to(first_xml, second_xml, output_file_path):
     """
     Computes the intersection (common keys) of two Android strings XML files and
     writes them to the output file. If the output file does not exist, it is created.
