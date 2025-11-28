@@ -10,6 +10,7 @@ import sys
 from contextlib import contextmanager
 
 import config
+import cross_app_login_config
 import database as db
 import eml_writer as ew
 import font_size
@@ -570,6 +571,11 @@ def define_commands(parser):
     bump_core_parser.add_argument("-p", "--projects", nargs="+",
                                   help="specify one or more project keyword names to handle (e.g. 'api web backend')")
     bump_core_parser.set_defaults(func=bump_core)
+
+    # Add lines needed for preprod cross app login to work
+    new_module_parser = subparsers.add_parser("crossapplogin",
+                                              help="modifies the code of the projet to make cross app login work on preprod")
+    new_module_parser.set_defaults(func=cross_app_login_config.add_preprod_cross_app_login_config)
 
 
 if __name__ == '__main__':
