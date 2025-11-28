@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import yaml
 
@@ -27,6 +28,10 @@ def get_global(section, key, raise_error=True):
 
 def manually_get_project(root_key, section, key, raise_error=True):
     return _get(root_key, section, key, raise_error)
+
+
+def get_project_module_parent():
+    return Path(get_project("global", "project_root")) / ".."
 
 
 def _get(root_key, section, key, raise_error):

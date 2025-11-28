@@ -1,5 +1,4 @@
 import subprocess
-from pathlib import Path
 
 import config
 
@@ -37,13 +36,13 @@ def insert_after_line(filepath, line_to_match, line_to_insert):
 
 
 def add_preprod_cross_app_login_config(args):
-    project_root = Path(config.get_project("global", "project_root")) / ".."
+    project_root = config.get_project_module_parent()
 
     main_application_path = find_first_path("MainApplication.kt", project_root)
     insert_after_line(
         filepath=main_application_path,
         line_to_match="NetworkConfiguration.init(",
-        line_to_insert="apiEnvironment = ApiEnvironment.PreProd,"
+        line_to_insert="    apiEnvironment = ApiEnvironment.PreProd,"
     )
 
     app_signing_path = find_first_path("AppSigningCertificates.kt", project_root)
