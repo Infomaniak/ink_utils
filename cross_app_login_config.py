@@ -34,20 +34,29 @@ def insert_after_line(filepath, line_to_match, line_to_insert):
     with open(filepath, "w", encoding="utf-8") as f:
         f.writelines(new_lines)
 
+    return inserted
+
 
 def add_preprod_cross_app_login_config(args):
-    project_root = config.get_project_module_parent()
+    for project in args.projects:
+        project_root = config.get_project_module_parent(project)
 
-    main_application_path = find_first_path("MainApplication.kt", project_root)
-    insert_after_line(
-        filepath=main_application_path,
-        line_to_match="NetworkConfiguration.init(",
-        line_to_insert="    apiEnvironment = ApiEnvironment.PreProd,"
-    )
+        main_application_path = find_first_path("MainApplication.kt", project_root)
+        target = "NetworkConfiguration.init("
+        is_success = insert_after_line(
+            filepath=main_application_path,
+            line_to_match=target,
+            line_to_insert="    apiEnvironment = ApiEnvironment.PreProd,",
+        )
+        if not is_success:
+            print(f"Could not find '{target}' in {main_application_path}")
 
-    app_signing_path = find_first_path("AppSigningCertificates.kt", project_root)
-    insert_after_line(
-        filepath=app_signing_path,
-        line_to_match="acceptedCertificates.any { it.matches(givenSha256) }",
-        line_to_insert="true"
-    )
+        app_signing_path = find_first_path("AppSigningCertificates.kt", project_root)
+        target = "acceptedCertificates.any { it.matches(givenSha256) }"
+        is_success = insert_after_line(
+            filepath=app_signing_path,
+            line_to_match=target,
+            line_to_insert="true",
+        )
+        if not is_success:
+            print(f"Could not find '{target}' in {main_application_path}")

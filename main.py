@@ -342,7 +342,7 @@ def set_airplane_mode(enabled_or_disabled, device_id):
 
 def bump_core(args):
     if len(args.projects) > 0:
-        project_git_paths = [config.manually_get_project(project, "global", "project_root") + "/.." for project in args.projects]
+        project_git_paths = [config.get_project_module_parent(project) for project in args.projects]
     else:
         project_git_paths = [config.get_project("global", "project_root") + "/.."]
 
@@ -370,6 +370,11 @@ def add_all_device_arg(parser):
 
 def add_restart_app_arg(parser):
     parser.add_argument("-r", "--restart", action="store_true", default=False, help="also restart the app")
+
+
+def add_project_arg(bump_core_parser):
+    bump_core_parser.add_argument("-p", "--projects", nargs="+",
+                                  help="specify one or more project keyword names to handle (e.g. 'mail drive euria')")
 
 
 def define_commands(parser):
@@ -568,13 +573,13 @@ def define_commands(parser):
                                              help="create a branch on current project which bumps core to target core branch")
     bump_core_parser.add_argument("core_branch_name", help="core branch name that you want to update to")
     bump_core_parser.add_argument("commit_message", nargs="?", help="specify the commit message to use")
-    bump_core_parser.add_argument("-p", "--projects", nargs="+",
-                                  help="specify one or more project keyword names to handle (e.g. 'api web backend')")
+    add_project_arg(bump_core_parser)
     bump_core_parser.set_defaults(func=bump_core)
 
     # Add lines needed for preprod cross app login to work
     new_module_parser = subparsers.add_parser("crossapplogin",
                                               help="modifies the code of the projet to make cross app login work on preprod")
+    add_project_arg(new_module_parser)
     new_module_parser.set_defaults(func=cross_app_login_config.add_preprod_cross_app_login_config)
 
 
