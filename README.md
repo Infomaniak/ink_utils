@@ -36,7 +36,16 @@ which parameters are missing.
 
 ### Setup for loco import
 
-The setup for `ink loco` to work requires you to define an api key for Loco and a module path where strings will be copied to.
+The setup for `ink loco` to work requires you to define an api key for Loco and a module path where strings will be copied to for
+each project. Here's an example from [settings.yml.example](settings.yml.example):
+
+```yml
+mail:
+    loco:
+        loco_key: XXX
+    global:
+        project_root: /Users/.../android-mail/app
+```
 
 The Loco API key only requires read access. To obtain your key, open the developer tools from the top-right menu in Loco.
 
