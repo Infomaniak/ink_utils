@@ -34,6 +34,14 @@ Values are only read when you run a command that requires them. Otherwise, they 
 If a required value is missing when a command is executed, the command will be aborted and a warning will be displayed indicating
 which parameters are missing.
 
+### Setup for loco import
+
+The setup for `ink loco` to work requires you to define an api key for Loco and a module path where strings will be copied to.
+
+The Loco API key only requires read access. To obtain your key, open the developer tools from the top-right menu in Loco.
+
+![loco_developer_tools.png](doc/loco_developer_tools.png)
+
 ## Commands and documentation
 
 The available commands can be listed with the help command:
