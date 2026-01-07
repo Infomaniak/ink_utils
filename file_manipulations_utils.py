@@ -1,5 +1,12 @@
 import os
 import subprocess
+from enum import Enum, auto
+
+
+class InsertPosition(Enum):
+    """Enum to choose where to insert the line relative to the match."""
+    BEFORE = auto()
+    AFTER = auto()
 
 
 def find_first_path(filename, search_path="/"):
@@ -8,38 +15,10 @@ def find_first_path(filename, search_path="/"):
     return result.decode().strip() or None
 
 
-def insert_after_line(filepath, line_to_match, line_to_insert):
+def insert_line_relative(filepath, line_to_match, line_to_insert, position: InsertPosition):
     """
-    Inserts `line_to_insert` on the line immediately after the first line
-    whose stripped content starts with `line_to_match`.
-    """
-    with open(filepath, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-
-    new_lines = []
-    inserted = False
-
-    for line in lines:
-        new_lines.append(line)
-
-        # Check if the line matches (ignoring leading spaces)
-        if not inserted and line.lstrip().startswith(line_to_match):
-            # preserve indentation level of the matched line
-            indent = line[:len(line) - len(line.lstrip())]
-            new_lines.append(indent + line_to_insert + "\n")
-            inserted = True
-
-    # Write the updated file
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.writelines(new_lines)
-
-    return inserted
-
-
-def insert_before_line(filepath, line_to_match, line_to_insert):
-    """
-    Inserts `line_to_insert` on the line immediately before the first line
-    whose stripped content starts with `line_to_match`.
+    Inserts `line_to_insert` relative to the first line whose stripped
+    content starts with `line_to_match`, determined by `position`.
     """
     with open(filepath, "r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -48,15 +27,22 @@ def insert_before_line(filepath, line_to_match, line_to_insert):
     inserted = False
 
     for line in lines:
-        # Check if the line matches (ignoring leading spaces)
-        if not inserted and line.lstrip().startswith(line_to_match):
-            # preserve indentation level of the matched line
-            indent = line[:len(line) - len(line.lstrip())]
-            new_lines.append(indent + line_to_insert + "\n")
-            inserted = True
-
-        # Add the current line after the check/insertion
-        new_lines.append(line)
+        # Handle Insert BEFORE
+        if position == InsertPosition.BEFORE:
+            if not inserted and line.lstrip().startswith(line_to_match):
+                # Preserve indentation level of the matched line
+                indent = line[:len(line) - len(line.lstrip())]
+                new_lines.append(indent + line_to_insert + "\n")
+                inserted = True
+            new_lines.append(line)
+        # Handle Insert AFTER
+        else:
+            new_lines.append(line)
+            if not inserted and line.lstrip().startswith(line_to_match):
+                # preserve indentation level of the matched line
+                indent = line[:len(line) - len(line.lstrip())]
+                new_lines.append(indent + line_to_insert + "\n")
+                inserted = True
 
     # Write the updated file
     with open(filepath, "w", encoding="utf-8") as f:
@@ -66,20 +52,22 @@ def insert_before_line(filepath, line_to_match, line_to_insert):
 
 
 def insert_after_line_or_warn(filepath, line_to_insert, line_to_match):
-    is_success = insert_after_line(
+    is_success = insert_line_relative(
         filepath=filepath,
         line_to_match=line_to_match,
         line_to_insert=line_to_insert,
+        position=InsertPosition.AFTER,
     )
     if not is_success:
         print(f"Could not find '{line_to_match}' in {filepath}")
 
 
 def insert_before_line_or_warn(filepath, line_to_insert, line_to_match):
-    is_success = insert_before_line(
+    is_success = insert_line_relative(
         filepath=filepath,
         line_to_match=line_to_match,
         line_to_insert=line_to_insert,
+        position=InsertPosition.BEFORE,
     )
     if not is_success:
         print(f"Could not find '{line_to_match}' in {filepath}")
