@@ -161,6 +161,9 @@ def update_loco(target_ids, loco_update_strategy, extracted_dir_root):
         add_missing_new_line_at_end_of(target_file_path)
         fix_loco_header(target_file_path)
 
+        if has_initialized_new_strings:
+            append_new_file_header(target_file_path)
+
     if has_initialized_new_strings:
         add_string_validation_ci_workflow()
 
@@ -199,6 +202,13 @@ def add_string_validation_ci_workflow():
           python ink_utils/main.py loco --check --verbose
 """
     insert_before_line_or_warn(workflow_file_path, new_validation_task, "- name: Run Ink validation")
+
+
+def append_new_file_header(path):
+    file = Path(path)
+    previous_content = file.read_text()
+    file.write_text("""<?xml version="1.0" encoding="utf-8"?>
+<!--TODO-->""" + previous_content)
 
 
 def remove_downloaded_strings():
