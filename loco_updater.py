@@ -6,11 +6,13 @@ import xml.etree.ElementTree as ET
 import zipfile
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 
 import requests
 
 import config as config
 import loco_validator.validator as loco_validator
+from file_manipulations_utils import insert_after_line_or_warn, find_closest_parent_git_directory, insert_before_line_or_warn
 from print_utils import color, Colors
 
 loco_tmp_dir = "/tmp/ink_archive"
@@ -141,18 +143,62 @@ def update_loco(target_ids, loco_update_strategy, extracted_dir_root):
     os.chdir(project_root)
 
     # Copy the strings.xml files from the archive to the project's values folder
+    has_initialized_new_strings = False
     project_path = loco_update_strategy.copy_target_folder
     for value_folder in value_folders:
-        target_file = f'{project_path}/{value_folder}/strings.xml'
-        source_file = f'{extracted_dir_root}/{value_folder}/strings.xml'
+        target_file_path = f'{project_path}/{value_folder}/strings.xml'
+        source_file_path = f'{extracted_dir_root}/{value_folder}/strings.xml'
 
-        drop_git_diffs_if_any(target_file)
-        update_android_strings(current_xml_path=target_file, new_xml_path=source_file, selected_tags=target_ids,
-                               output_xml_path=target_file)
-        add_missing_new_line_at_end_of(target_file)
-        fix_loco_header(target_file)
+        target_file = Path(target_file_path)
+        if target_file.exists():
+            drop_git_diffs_if_any(target_file_path)
+        else:
+            has_initialized_new_strings = True
+            create_empty_file(target_file)
+
+        update_android_strings(current_xml_path=target_file_path, new_xml_path=source_file_path, selected_tags=target_ids,
+                               output_xml_path=target_file_path)
+        add_missing_new_line_at_end_of(target_file_path)
+        fix_loco_header(target_file_path)
+
+    if has_initialized_new_strings:
+        add_string_validation_ci_workflow()
 
     print("String resources updated")
+
+
+def create_empty_file(file):
+    file.parent.mkdir(parents=True, exist_ok=True)
+    file.touch()
+    file.write_text("<resources/>")
+
+
+def add_string_validation_ci_workflow():
+    git_project_directory = find_closest_parent_git_directory(project_root)
+
+    if git_project_directory is None:
+        print("Warning: Could not update string validation CI workflow. Do it manually")
+        return
+
+    workflow_file = Path(git_project_directory) / ".github" / "workflows" / "translations-validation.yml"
+    if not workflow_file.exists():
+        print("Warning: Could not update string validation CI workflow. Do it manually")
+        return
+
+    workflow_file_path = workflow_file.__str__()
+
+    new_module_config = """TODO_PROJECT_NAME:
+            global:
+              project_root: "${PR_PATH}/TODO\""""
+    insert_after_line_or_warn(workflow_file_path, new_module_config, "cat <<EOF > ink_utils/settings.yml")
+
+    new_validation_task = """- name: Run Ink validation for TODO module
+        run: |
+          source ink_utils/venv/bin/activate
+          python ink_utils/main.py project TODO_PROJECT_NAME
+          python ink_utils/main.py loco --check --verbose
+"""
+    insert_before_line_or_warn(workflow_file_path, new_validation_task, "- name: Run Ink validation")
 
 
 def remove_downloaded_strings():
@@ -255,6 +301,7 @@ def update_android_strings(current_xml_path, new_xml_path, selected_tags, output
     root_current[:] = non_translatable_elems + translatable_elems
 
     # Save the updated XML file
+    ET.indent(tree_current, space="    ", level=0)
     tree_current.write(output_xml_path, encoding="utf-8")
 
 
