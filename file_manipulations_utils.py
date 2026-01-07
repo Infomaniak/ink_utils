@@ -84,8 +84,9 @@ def find_closest_parent_git_directory(current_directory):
     current_directory = os.path.abspath(current_directory)
 
     while True:
-        git_path = os.path.join(current_directory, ".github")
-        if os.path.isdir(git_path):
+        git_path = os.path.join(current_directory, ".git")
+        github_path = os.path.join(current_directory, ".github")
+        if os.path.isdir(git_path) or os.path.isdir(github_path):
             return current_directory
 
         parent_directory = os.path.dirname(current_directory)
