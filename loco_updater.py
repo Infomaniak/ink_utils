@@ -294,8 +294,13 @@ def drop_git_diffs_if_any(target_file):
 
 def update_android_strings(current_xml_path, new_xml_path, selected_tags, output_xml_path):
     """
-    :param selected_tags: If empty, all modifications will be applied
-    :return: Stat object containing info what differences have been observed
+    Updates Android string resources by merging changes from new XML into current XML.
+    
+    Args:
+        current_xml_path: Path to current strings.xml file
+        new_xml_path: Path to new strings.xml file with updates
+        selected_tags: List of tag names to update (empty list means update all)
+        output_xml_path: Path where updated XML should be written
     """
     register_android_xml_namespaces()
 
@@ -309,31 +314,54 @@ def update_android_strings(current_xml_path, new_xml_path, selected_tags, output
     # Convert selected_tags list to set for faster lookup
     selected_tags_set = set(selected_tags)
 
-    # Remove all selected tags from the current root
+    # Process XML content
+    _remove_selected_tags(root_current, selected_tags, selected_tags_set)
+    _insert_new_tags(root_new, root_current, selected_tags, selected_tags_set)
+    _sort_and_reorganize_elements(root_current)
+
+    # Apply formatting only for new files which are the only ones that need it. This way already existing files don't lose their
+    # empty lines because of the formatting
+    if _should_format_new_file(root_current):
+        ET.indent(tree_current, space="    ", level=0)
+    
+    tree_current.write(output_xml_path, encoding="utf-8")
+
+
+def _remove_selected_tags(root_current, selected_tags, selected_tags_set):
+    """Remove tags from current XML that need to be updated."""
     for elem in list(root_current):
         name = elem.get('name')
         if (len(selected_tags) == 0 and name not in ignored_ids) or name in selected_tags_set:
             root_current.remove(elem)
 
-    # Insert selected tags in the order they appear in the new XML
+
+def _insert_new_tags(root_new, root_current, selected_tags, selected_tags_set):
+    """Insert new tags from source XML into target XML."""
     for elem in root_new:
         name = elem.get('name')
         if len(selected_tags) == 0 or name in selected_tags_set:
             root_current.append(elem)
 
-    # Separate translatable="false" tags (keep in original order)
+
+def _sort_and_reorganize_elements(root_current):
+    """Sort translatable elements while preserving non-translatable order."""
     non_translatable_elems = [e for e in root_current if e.get('translatable') == 'false']
     translatable_elems = [e for e in root_current if e.get('translatable') != 'false']
-
+    
     # Sort only the translatable ones alphabetically by name
     translatable_elems.sort(key=lambda e: e.get('name') or "")
-
+    
     # Combine back (non-translatable first, sorted translatable after)
     root_current[:] = non_translatable_elems + translatable_elems
 
-    # Save the updated XML file
-    ET.indent(tree_current, space="    ", level=0)
-    tree_current.write(output_xml_path, encoding="utf-8")
+
+def _should_format_new_file(root):
+    """Check if file is new and needs formatting."""
+    return len(list(root)) == 0 or (
+        len(list(root)) == 1 and
+        list(root)[0].tag == "resources" and
+        len(list(root)[0]) == 0
+    )
 
 
 def compute_file_diffs(old_file, new_file):
