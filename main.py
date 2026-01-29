@@ -84,7 +84,7 @@ def update_loco_core(args):
     loco_update_strategy = lu.LocoUpdateStrategy(
         # If only checking strings validity, no need to raise an error for a missing loco api key
         api_key=config.get_global("loco", "core_key", raise_error=not args.check),
-        copy_target_folder=project_root + "/../Core" + res_folder_path,
+        copy_target_folder=project_root + "/../Core/Common" + res_folder_path,
     )
 
     import_strings(args, loco_update_strategy, args.tag)
