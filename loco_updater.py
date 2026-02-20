@@ -16,7 +16,19 @@ from file_manipulations_utils import insert_after_line_or_warn, find_closest_par
 from print_utils import color, Colors
 
 loco_tmp_dir = "/tmp/ink_archive"
-value_folders = ['values', 'values-de', 'values-es', 'values-fr', 'values-it']
+value_folders = ['values',
+                 'values-de',
+                 'values-es',
+                 'values-fr',
+                 'values-it',
+                 "values-da",
+                 "values-el",
+                 "values-fi",
+                 "values-nl",
+                 "values-no",
+                 "values-pl",
+                 "values-pt",
+                 "values-sv"]
 
 project_root = config.get_project("global", "project_root")
 
@@ -86,8 +98,10 @@ def compute_intersection_of_res_folders(android_res_folder, tag_res_folder, outp
     for folder in value_folders:
         android_xml = f"{android_res_folder}/{folder}/strings.xml"
         tag_xml = f"{tag_res_folder}/{folder}/strings.xml"
-        output = f"{output_res_folder}/{folder}/strings.xml"
-        compute_intersection_to(android_xml, tag_xml, output)
+
+        if os.path.exists(android_xml) and os.path.exists(tag_xml):
+            output = f"{output_res_folder}/{folder}/strings.xml"
+            compute_intersection_to(android_xml, tag_xml, output)
 
 
 def compute_intersection_to(first_xml, second_xml, output_file_path):
@@ -146,8 +160,12 @@ def update_loco(target_ids, loco_update_strategy, extracted_dir_root):
     has_initialized_new_strings = False
     project_path = loco_update_strategy.copy_target_folder
     for value_folder in value_folders:
-        target_file_path = f'{project_path}/{value_folder}/strings.xml'
         source_file_path = f'{extracted_dir_root}/{value_folder}/strings.xml'
+
+        if not os.path.exists(source_file_path):
+            continue
+
+        target_file_path = f'{project_path}/{value_folder}/strings.xml'
 
         target_file = Path(target_file_path)
         if target_file.exists():
@@ -217,14 +235,17 @@ def remove_downloaded_strings():
 
 
 def compute_project_diffs(loco_update_strategy, extracted_dir_root):
-    # needs_to_print_diffs = len(target_ids) > 0 or only_display_diff
     project_path = loco_update_strategy.copy_target_folder
 
     id_diffs = {}
     for value_folder in value_folders:
         # TODO: Factorize
-        target_file = f'{project_path}/{value_folder}/strings.xml'
         source_file = f'{extracted_dir_root}/{value_folder}/strings.xml'
+
+        if not os.path.exists(source_file):
+            continue
+
+        target_file = f'{project_path}/{value_folder}/strings.xml'
 
         id_diffs[get_ui_acronym_of(value_folder)] = compute_file_diffs(target_file, source_file)
 
@@ -459,6 +480,10 @@ def validate_strings(loco_update_strategy):
     project_path = loco_update_strategy.copy_target_folder
     for value_folder in value_folders:
         current_file = f'{project_path}/{value_folder}/strings.xml'
+
+        if not os.path.exists(current_file):
+            continue
+
         tree = ET.parse(current_file)
 
         parts = value_folder.split("-")
