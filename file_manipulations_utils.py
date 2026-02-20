@@ -44,9 +44,11 @@ def insert_line_relative(filepath, line_to_match, line_to_insert, position: Inse
                 new_lines.append(indent + line_to_insert + "\n")
                 inserted = True
 
-    # Write the updated file
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.writelines(new_lines)
+    # Not only is it useless to write the file but apparently the file becomes empty when it fails at finding the expected line
+    if inserted:
+        # Write the updated file
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.writelines(new_lines)
 
     return inserted
 
