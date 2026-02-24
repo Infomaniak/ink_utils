@@ -127,11 +127,12 @@ def import_strings(args, loco_update_strategy, feature_tag):
 
     # Determine what operations we need
     is_default_case = not args.diff and not args.check  # The default case with no args
+    is_tag_provided = args.target_ids is not None and len(args.target_ids) > 0
+
     needs_download = is_default_case or args.diff
     needs_update = is_default_case
     needs_check = is_default_case or args.check
-    needs_diff = (is_default_case and args.target_ids is not None and len(args.target_ids) > 0) \
-                 or args.diff  # In default case only if a tag has been provided
+    needs_diff = (is_default_case and is_tag_provided) or args.diff
 
     if needs_download:
         with download_resources() as downloaded_folder:
