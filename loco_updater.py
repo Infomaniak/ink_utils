@@ -157,7 +157,7 @@ def update_loco(target_ids, loco_update_strategy, extracted_dir_root):
     os.chdir(project_root)
 
     # Copy the strings.xml files from the archive to the project's values folder
-    has_initialized_new_strings = False
+    has_initialized_new_strings = True
     project_path = loco_update_strategy.copy_target_folder
     for value_folder in value_folders:
         source_file_path = f'{extracted_dir_root}/{value_folder}/strings.xml'
@@ -168,18 +168,19 @@ def update_loco(target_ids, loco_update_strategy, extracted_dir_root):
         target_file_path = f'{project_path}/{value_folder}/strings.xml'
 
         target_file = Path(target_file_path)
-        if target_file.exists():
-            drop_git_diffs_if_any(target_file_path)
-        else:
-            has_initialized_new_strings = True
+        is_this_file_new = not target_file.exists()
+        if is_this_file_new:
             create_empty_file(target_file)
+        else:
+            has_initialized_new_strings = False
+            drop_git_diffs_if_any(target_file_path)
 
         update_android_strings(current_xml_path=target_file_path, new_xml_path=source_file_path, selected_tags=target_ids,
                                output_xml_path=target_file_path)
         add_missing_new_line_at_end_of(target_file_path)
         fix_loco_header(target_file_path)
 
-        if has_initialized_new_strings:
+        if is_this_file_new:
             append_new_file_header(target_file_path)
 
     if has_initialized_new_strings:
