@@ -323,7 +323,7 @@ def update_android_strings(current_xml_path, new_xml_path, selected_tags, output
     # empty lines because of the formatting
     if _should_format_new_file(root_current):
         ET.indent(tree_current, space="    ", level=0)
-    
+
     tree_current.write(output_xml_path, encoding="utf-8")
 
 
@@ -347,10 +347,10 @@ def _sort_and_reorganize_elements(root_current):
     """Sort translatable elements while preserving non-translatable order."""
     non_translatable_elems = [e for e in root_current if e.get('translatable') == 'false']
     translatable_elems = [e for e in root_current if e.get('translatable') != 'false']
-    
+
     # Sort only the translatable ones alphabetically by name
     translatable_elems.sort(key=lambda e: e.get('name') or "")
-    
+
     # Combine back (non-translatable first, sorted translatable after)
     root_current[:] = non_translatable_elems + translatable_elems
 
@@ -358,9 +358,9 @@ def _sort_and_reorganize_elements(root_current):
 def _should_format_new_file(root):
     """Check if file is new and needs formatting."""
     return len(list(root)) == 0 or (
-        len(list(root)) == 1 and
-        list(root)[0].tag == "resources" and
-        len(list(root)[0]) == 0
+            len(list(root)) == 1 and
+            list(root)[0].tag == "resources" and
+            len(list(root)[0]) == 0
     )
 
 
