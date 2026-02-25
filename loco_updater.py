@@ -263,7 +263,7 @@ def pretty_print_diff(id_diffs):
 
 
 def download_zip(tag, loco_key, archive_name):
-    zip_url = f"https://localise.biz/api/export/archive/xml.zip?format=android&filter=${tag}&fallback=en&order=id&key={loco_key}"
+    zip_url = f"https://localise.biz/api/export/archive/xml.zip?format=android&filter={tag}&fallback=en&order=id&key={loco_key}"
 
     response = requests.get(zip_url)
 
