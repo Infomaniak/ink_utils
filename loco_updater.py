@@ -307,6 +307,7 @@ def update_android_strings(current_xml_path, new_xml_path, selected_tags, output
     # Parse both XML files
     tree_current = ET.parse(current_xml_path)
     root_current = tree_current.getroot()
+    should_format_new_file = _should_format_new_file(root_current)  # Check before root_current is mutated
 
     tree_new = ET.parse(new_xml_path)
     root_new = tree_new.getroot()
@@ -321,7 +322,7 @@ def update_android_strings(current_xml_path, new_xml_path, selected_tags, output
 
     # Apply formatting only for new files which are the only ones that need it. This way already existing files don't lose their
     # empty lines because of the formatting
-    if _should_format_new_file(root_current):
+    if should_format_new_file:
         ET.indent(tree_current, space="    ", level=0)
 
     tree_current.write(output_xml_path, encoding="utf-8")
@@ -357,10 +358,11 @@ def _sort_and_reorganize_elements(root_current):
 
 def _should_format_new_file(root):
     """Check if file is new and needs formatting."""
-    return len(list(root)) == 0 or (
-            len(list(root)) == 1 and
-            list(root)[0].tag == "resources" and
-            len(list(root)[0]) == 0
+    root_elements = list(root)
+    return len(root_elements) == 0 or (
+            len(root_elements) == 1 and
+            root_elements[0].tag == "resources" and
+            len(root_elements[0]) == 0
     )
 
 
