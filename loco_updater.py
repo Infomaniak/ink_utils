@@ -44,9 +44,10 @@ ignored_ids = {
 
 
 class LocoUpdateStrategy:
-    def __init__(self, api_key, copy_target_folder):
+    def __init__(self, api_key, copy_target_folder, git_project_root):
         self.api_key = api_key
         self.copy_target_folder = copy_target_folder
+        self.git_project_root = git_project_root
 
 
 def download_strings(loco_update_strategy, input_feature_tag):
@@ -173,12 +174,12 @@ def update_loco(target_ids, loco_update_strategy, extracted_dir_root):
             create_empty_file(target_file)
         else:
             has_initialized_new_strings = False
-            drop_git_diffs_if_any(target_file_path)
+            drop_git_diffs_if_any(target_file_path, loco_update_strategy.git_project_root)
 
         update_android_strings(current_xml_path=target_file_path, new_xml_path=source_file_path, selected_tags=target_ids,
                                output_xml_path=target_file_path)
         add_missing_new_line_at_end_of(target_file_path)
-        fix_loco_header(target_file_path)
+        fix_loco_header(target_file_path, loco_update_strategy.git_project_root)
 
         if is_this_file_new:
             append_new_file_header(target_file_path)
@@ -288,9 +289,24 @@ def join_to_string(item_list):
         return ',' + ','.join(f"!{item}" for item in item_list)
 
 
-def drop_git_diffs_if_any(target_file):
-    relative_path = target_file[len(project_root) + 1:]
-    subprocess.run(["git", "restore", "--", relative_path], cwd=project_root, check=True)
+def drop_git_diffs_if_any(target_file, git_project_root):
+    relative_path = target_file[len(git_project_root) + 1:]
+
+    # Check if file is tracked by git
+    result = subprocess.run(
+        ["git", "ls-files", "--error-unmatch", relative_path],
+        cwd=git_project_root,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+    if result.returncode == 0:
+        # File is tracked → restore it
+        subprocess.run(["git", "restore", "--", relative_path], cwd=git_project_root, check=True)
+    else:
+        # File is untracked → optionally delete it
+        if os.path.exists(target_file):
+            os.remove(target_file)
 
 
 def update_android_strings(current_xml_path, new_xml_path, selected_tags, output_xml_path):
@@ -327,6 +343,8 @@ def update_android_strings(current_xml_path, new_xml_path, selected_tags, output
         ET.indent(tree_current, space="    ", level=0)
 
     tree_current.write(output_xml_path, encoding="utf-8")
+
+    _fix_closing_tag_indent(output_xml_path)
 
 
 def _remove_selected_tags(root_current, selected_tags, selected_tags_set):
@@ -365,6 +383,14 @@ def _should_format_new_file(root):
             root_elements[0].tag == "resources" and
             len(root_elements[0]) == 0
     )
+
+
+# Ugly fix to remove this persistent issues with the formatting of the last closing </resources> tag
+def _fix_closing_tag_indent(output_xml_path):
+    path = Path(output_xml_path)
+    text = path.read_text()
+    if text.endswith("    </resources>"):
+        path.write_text(text[:-len("    </resources>")] + "</resources>")
 
 
 def compute_file_diffs(old_file, new_file):
@@ -433,9 +459,9 @@ def add_missing_new_line_at_end_of(target_file):
             f.write(b'\n')  # add one if missing
 
 
-def fix_loco_header(target_file):
+def fix_loco_header(target_file, git_project_root):
     walker = HeaderDiffWalker()
-    walker.run(target_file)
+    walker.run(target_file, git_project_root)
 
     replace_with = "\n".join(walker.removed_lines)
 
@@ -453,9 +479,10 @@ class DiffWalker:
     def walk(self, line, line_diff_type):
         pass
 
-    def run(self, target_file):
+    def run(self, target_file, git_project_root):
         # -U0 forces the git diff to have zero padding lines around the diff to avoid breaking the detection
-        result = subprocess.run(f"git diff -U0 {target_file}", stdout=subprocess.PIPE, shell=True, universal_newlines=True)
+        result = subprocess.run(f"git diff -U0 {target_file}", stdout=subprocess.PIPE, shell=True, universal_newlines=True,
+                                cwd=git_project_root)
         diff = result.stdout
         for line in diff.split("\n")[5:]:
             if len(line) == 0:
