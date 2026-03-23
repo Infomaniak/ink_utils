@@ -329,6 +329,8 @@ def update_android_strings(current_xml_path, new_xml_path, selected_keys, output
     tree_new = ET.parse(new_xml_path)
     root_new = tree_new.getroot()
 
+    saved_attributes = extract_xml_attributes(root_current)
+
     # Convert selected_tags list to set for faster lookup
     selected_keys_set = set(selected_keys)
 
@@ -336,6 +338,8 @@ def update_android_strings(current_xml_path, new_xml_path, selected_keys, output
     _remove_selected_keys(root_current, selected_keys_set)
     _insert_new_keys(root_new, root_current, selected_keys_set)
     _sort_and_reorganize_elements(root_current)
+
+    apply_xml_attributes(root_current, saved_attributes)
 
     # Apply formatting only for new files which are the only ones that need it. This way already existing files don't lose their
     # empty lines because of the formatting
@@ -345,6 +349,27 @@ def update_android_strings(current_xml_path, new_xml_path, selected_keys, output
     tree_current.write(output_xml_path, encoding="utf-8")
 
     _fix_closing_tag_indent(output_xml_path)
+
+
+def extract_xml_attributes(root):
+    key_to_attributes_dict = {}
+
+    for elem in root:  # Loop through directy children only
+        key = elem.get('name')
+        attribute_dict = dict(elem.attrib)
+        attribute_dict.pop("name", None)
+        key_to_attributes_dict[key] = attribute_dict
+
+    return key_to_attributes_dict
+
+
+def apply_xml_attributes(root, key_to_attributes_dict):
+    for elem in root:  # Loop through directy children only
+        key = elem.get('name')
+
+        attributes = key_to_attributes_dict[key]
+        for attribute, value in attributes.items():
+            elem.set(attribute, value)
 
 
 def _remove_selected_keys(root_current, selected_tags_set):
