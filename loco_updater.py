@@ -176,7 +176,7 @@ def update_loco(target_ids, loco_update_strategy, extracted_dir_root):
             has_initialized_new_strings = False
             drop_git_diffs_if_any(target_file_path, loco_update_strategy.git_project_root)
 
-        update_android_strings(current_xml_path=target_file_path, new_xml_path=source_file_path, selected_tags=target_ids,
+        update_android_strings(current_xml_path=target_file_path, new_xml_path=source_file_path, selected_keys=target_ids,
                                output_xml_path=target_file_path)
         add_missing_new_line_at_end_of(target_file_path)
         fix_loco_header(target_file_path, loco_update_strategy.git_project_root)
@@ -309,14 +309,14 @@ def drop_git_diffs_if_any(target_file, git_project_root):
             os.remove(target_file)
 
 
-def update_android_strings(current_xml_path, new_xml_path, selected_tags, output_xml_path):
+def update_android_strings(current_xml_path, new_xml_path, selected_keys, output_xml_path):
     """
     Updates Android string resources by merging changes from new XML into current XML.
     
     Args:
         current_xml_path: Path to current strings.xml file
         new_xml_path: Path to new strings.xml file with updates
-        selected_tags: List of tag names to update (empty list means update all)
+        selected_keys: List of key names to update (empty list means update all)
         output_xml_path: Path where updated XML should be written
     """
     register_android_xml_namespaces()
@@ -330,11 +330,11 @@ def update_android_strings(current_xml_path, new_xml_path, selected_tags, output
     root_new = tree_new.getroot()
 
     # Convert selected_tags list to set for faster lookup
-    selected_tags_set = set(selected_tags)
+    selected_keys_set = set(selected_keys)
 
     # Process XML content
-    _remove_selected_tags(root_current, selected_tags, selected_tags_set)
-    _insert_new_tags(root_new, root_current, selected_tags, selected_tags_set)
+    _remove_selected_keys(root_current, selected_keys_set)
+    _insert_new_keys(root_new, root_current, selected_keys_set)
     _sort_and_reorganize_elements(root_current)
 
     # Apply formatting only for new files which are the only ones that need it. This way already existing files don't lose their
@@ -347,19 +347,19 @@ def update_android_strings(current_xml_path, new_xml_path, selected_tags, output
     _fix_closing_tag_indent(output_xml_path)
 
 
-def _remove_selected_tags(root_current, selected_tags, selected_tags_set):
+def _remove_selected_keys(root_current, selected_tags_set):
     """Remove tags from current XML that need to be updated."""
     for elem in list(root_current):
         name = elem.get('name')
-        if (len(selected_tags) == 0 and name not in ignored_ids) or name in selected_tags_set:
+        if (len(selected_tags_set) == 0 and name not in ignored_ids) or name in selected_tags_set:
             root_current.remove(elem)
 
 
-def _insert_new_tags(root_new, root_current, selected_tags, selected_tags_set):
+def _insert_new_keys(root_new, root_current, selected_tags_set):
     """Insert new tags from source XML into target XML."""
     for elem in root_new:
         name = elem.get('name')
-        if len(selected_tags) == 0 or name in selected_tags_set:
+        if len(selected_tags_set) == 0 or name in selected_tags_set:
             root_current.append(elem)
 
 
