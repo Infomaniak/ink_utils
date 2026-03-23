@@ -324,12 +324,11 @@ def update_android_strings(current_xml_path, new_xml_path, selected_keys, output
     # Parse both XML files
     tree_current = ET.parse(current_xml_path)
     root_current = tree_current.getroot()
-    should_format_new_file = _should_format_new_file(root_current)  # Check before root_current is mutated
 
     tree_new = ET.parse(new_xml_path)
     root_new = tree_new.getroot()
 
-    saved_attributes = extract_xml_attributes(root_current)
+    saved_attributes = _extract_xml_attributes(root_current)
 
     # Convert selected_tags list to set for faster lookup
     selected_keys_set = set(selected_keys)
@@ -339,22 +338,16 @@ def update_android_strings(current_xml_path, new_xml_path, selected_keys, output
     _insert_new_keys(root_new, root_current, selected_keys_set)
     _sort_and_reorganize_elements(root_current)
 
-    apply_xml_attributes(root_current, saved_attributes)
+    _apply_xml_attributes(root_current, saved_attributes)
 
-    # Apply formatting only for new files which are the only ones that need it. This way already existing files don't lose their
-    # empty lines because of the formatting
-    if should_format_new_file:
-        ET.indent(tree_current, space="    ", level=0)
-
+    _indent(root_current)
     tree_current.write(output_xml_path, encoding="utf-8")
 
-    _fix_closing_tag_indent(output_xml_path)
 
-
-def extract_xml_attributes(root):
+def _extract_xml_attributes(root):
     key_to_attributes_dict = {}
 
-    for elem in root:  # Loop through directy children only
+    for elem in root:  # Loop through directly children only
         key = elem.get('name')
         attribute_dict = dict(elem.attrib)
         attribute_dict.pop("name", None)
@@ -363,9 +356,12 @@ def extract_xml_attributes(root):
     return key_to_attributes_dict
 
 
-def apply_xml_attributes(root, key_to_attributes_dict):
-    for elem in root:  # Loop through directy children only
+def _apply_xml_attributes(root, key_to_attributes_dict):
+    for elem in root:  # Loop through directly children only
         key = elem.get('name')
+
+        if key not in key_to_attributes_dict:
+            continue
 
         attributes = key_to_attributes_dict[key]
         for attribute, value in attributes.items():
@@ -400,14 +396,21 @@ def _sort_and_reorganize_elements(root_current):
     root_current[:] = non_translatable_elems + translatable_elems
 
 
-def _should_format_new_file(root):
-    """Check if file is new and needs formatting."""
-    root_elements = list(root)
-    return len(root_elements) == 0 or (
-            len(root_elements) == 1 and
-            root_elements[0].tag == "resources" and
-            len(root_elements[0]) == 0
-    )
+def _indent(root_elem, level=0):
+    """Pretty print XML"""
+    i = "\n" + level * "    "
+
+    if len(root_elem):
+        if not root_elem.text or not root_elem.text.strip():
+            root_elem.text = i + "    "
+
+        for elem in root_elem:
+            _indent(elem, level + 1)
+        if not elem.tail or not elem.tail.strip():  # Actually needed
+            elem.tail = i
+
+    if level and (not root_elem.tail or not root_elem.tail.strip()):
+        root_elem.tail = i
 
 
 # Ugly fix to remove this persistent issues with the formatting of the last closing </resources> tag
