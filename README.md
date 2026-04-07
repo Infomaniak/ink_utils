@@ -7,10 +7,15 @@ A collection of commands to automatize tedious tasks in the form of a command li
 * Clone the project
 * Install python if not already present
     * Help: I recommend using the [official python installer](https://www.python.org/downloads/) over brew
-* Create an alias in your .zshrc pointing to [main.py](main.py)
+* Create an alias in your .zshrc (or other equivalent file) pointing to [main.py](main.py)
 
 ```
 alias ink="~/Documents/.../ink_utils/main.py"
+```
+
+* Add execution capabilities to the script file so the previous alias works correctly
+```
+chmod +x main.py
 ```
 
 * Go to the cloned project's root directory and install the project's python dependencies
