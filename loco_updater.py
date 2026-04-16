@@ -14,6 +14,7 @@ import config as config
 import loco_validator.validator as loco_validator
 from file_manipulations_utils import insert_after_line_or_warn, find_closest_parent_git_directory, insert_before_line_or_warn
 from print_utils import color, Colors
+from utils.android_xml_formatter import indent_android_strings_xml
 
 loco_tmp_dir = "/tmp/ink_archive"
 value_folders = ['values',
@@ -340,7 +341,7 @@ def update_android_strings(current_xml_path, new_xml_path, selected_keys, output
 
     _apply_xml_attributes(root_current, saved_attributes)
 
-    _indent(root_current)
+    indent_android_strings_xml(root_current)
     tree_current.write(output_xml_path, encoding="utf-8")
 
 
@@ -394,23 +395,6 @@ def _sort_and_reorganize_elements(root_current):
 
     # Combine back (non-translatable first, sorted translatable after)
     root_current[:] = non_translatable_elems + translatable_elems
-
-
-def _indent(root_elem, level=0):
-    """Pretty print XML"""
-    i = "\n" + level * "    "
-
-    if len(root_elem):
-        if not root_elem.text or not root_elem.text.strip():
-            root_elem.text = i + "    "
-
-        for elem in root_elem:
-            _indent(elem, level + 1)
-        if not elem.tail or not elem.tail.strip():  # Actually needed
-            elem.tail = i
-
-    if level and (not root_elem.tail or not root_elem.tail.strip()):
-        root_elem.tail = i
 
 
 # Ugly fix to remove this persistent issues with the formatting of the last closing </resources> tag

@@ -4,7 +4,7 @@ import subprocess
 from datetime import datetime
 
 from print_utils import rainbow_print, color, Colors
-from utils import ink_folder
+from common_utils import ink_folder
 
 cache_file = ink_folder + "/updater_cache"
 

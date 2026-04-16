@@ -4,7 +4,7 @@ import subprocess
 
 import config as config
 from adb import adb, select_device, close_app, open_app, select_device_or_all, warn_if_current_project_app_is_not_focused
-from utils import remove_empty_items, select_in_list
+from common_utils import remove_empty_items, select_in_list
 
 
 def clear_mail_db(args):

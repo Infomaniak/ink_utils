@@ -1,7 +1,7 @@
 import subprocess
 
 import config
-from utils import remove_empty_items, select_in_list, cancel_ink_command
+from common_utils import remove_empty_items, select_in_list, cancel_ink_command
 
 
 def adb(command_args, device_id, stderr=None):
