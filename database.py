@@ -64,7 +64,7 @@ def align_columns(files):
 
 
 def get_regex_db_pattern():
-    return ".*\.realm\s.*"
+    return r".*\.realm\s.*"
 
 
 def get_glob_db_pattern():
