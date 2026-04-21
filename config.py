@@ -26,12 +26,12 @@ def get_global(section, key, raise_error=True):
     return _get("global", section, key, raise_error)
 
 
-def _manually_get_project(root_key, section, key, raise_error=True):
+def manually_get_project(root_key, section, key, raise_error=True):
     return _get(root_key, section, key, raise_error)
 
 
 def get_project_module_parent(root_key=project_key):
-    return Path(_manually_get_project(root_key, "global", "project_root")) / ".."
+    return Path(manually_get_project(root_key, "global", "project_root")) / ".."
 
 
 def _get(root_key, section, key, raise_error):
