@@ -20,8 +20,12 @@ import navbar_mode
 import projects
 from adb import adb, select_device, close_app, open_app, select_device_or_all, warn_if_current_project_app_is_not_focused
 from adb_prop import show_layout_bounds, show_layout_bars
-from updater import check_for_updates, rm_cache as update_rm_cache, update_git_project, update_cmd
 from common_utils import select_in_list, accept_substitution, ink_folder, cancel_ink_command
+from updater import check_for_updates, rm_cache as update_rm_cache, update_git_project, update_cmd
+
+
+class LocoImportError(Exception):
+    pass
 
 
 def show_version(args):
@@ -66,10 +70,11 @@ def copy_last_video(args):
 
 def update_loco(args):
     project_keys = args.projects if args.projects else [config.project_key]
+    failed_projects = []
 
     for project in project_keys:
         if len(project_keys) > 1:
-            print(f"\nProcessing project {project}")
+            print(f"\n* Processing project {project}")
 
         project_root = config.manually_get_project(project, "global", "project_root")
         res_folder_path = "/src/main/res"
@@ -82,11 +87,20 @@ def update_loco(args):
             git_project_root=project_root,
         )
 
-        import_strings(args, loco_update_strategy, args.tag)
+        try:
+            import_strings(args, loco_update_strategy, args.tag)
+        except LocoImportError as _:
+            failed_projects.append(project)
+
+    if failed_projects:
+        if len(project_keys) > 1:
+            print(f"\nFailed projects: {', '.join(failed_projects)}")
+        exit(1)
 
 
 def update_loco_core(args):
     project_keys = args.projects if args.projects else [config.project_key]
+    failed_projects = []
 
     for project in project_keys:
         if len(project_keys) > 1:
@@ -103,7 +117,15 @@ def update_loco_core(args):
             git_project_root=project_root + "/../Core",
         )
 
-        import_strings(args, loco_update_strategy, args.tag)
+        try:
+            import_strings(args, loco_update_strategy, args.tag)
+        except LocoImportError as _:
+            failed_projects.append(project)
+
+    if failed_projects:
+        if len(project_keys) > 1:
+            print(f"\nFailed projects: {', '.join(failed_projects)}")
+        exit(1)
 
 
 def get_module_or_default(args, default):
@@ -116,7 +138,7 @@ def import_strings(args, loco_update_strategy, feature_tag):
         try:
             extracted_dir_root = lu.download_strings(loco_update_strategy, feature_tag)
             if None:
-                exit(1)
+                raise LocoImportError("Failed to download strings")
 
             yield extracted_dir_root
         finally:
@@ -143,7 +165,7 @@ def import_strings(args, loco_update_strategy, feature_tag):
                 print("  • Correct the strings and re-import translations into the project.")
                 print("  • If this is a false positive, add the string ID as an exception in loco_validator/validator.py, "
                       "then confirm with the project maintainers.")
-            exit(1)
+            raise LocoImportError("Found errors in imported strings")
 
     # Determine what operations we need
     is_default_case = not args.diff and not args.check  # The default case with no args
