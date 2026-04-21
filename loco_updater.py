@@ -546,6 +546,7 @@ class LineDiffType(Enum):
 
 def validate_strings(loco_update_strategy):
     error_count = 0
+    key_translations = {}
 
     project_path = loco_update_strategy.copy_target_folder
     for value_folder in value_folders:
@@ -566,13 +567,17 @@ def validate_strings(loco_update_strategy):
 
             if tag == "string":
                 error_count += loco_validator.validate_string(language, name, value)
+                key_translations.setdefault(name, {})[language] = value
             elif tag == "plurals":
-                error_count += validate_plural(element, language, name)
+                error_count += validate_plural(element, language, name, key_translations)
+
+    for name, translations in key_translations.items():
+        error_count += loco_validator.validate_key_across_locales(name, translations)
 
     return error_count
 
 
-def validate_plural(plural, language, name):
+def validate_plural(plural, language, name, key_translations):
     error_count = 0
 
     for element in plural:
@@ -580,5 +585,6 @@ def validate_plural(plural, language, name):
         plural_value = element.text
 
         error_count += loco_validator.validate_string(language, plural_name, plural_value)
+        key_translations.setdefault(plural_name, {})[language] = plural_value
 
     return error_count
