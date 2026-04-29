@@ -25,3 +25,10 @@ global:
     login:
         id: bob@infomaniak.com
         pwd: 1234
+
+# Optional per-project override for the language list used by `ink translate`.
+# When omitted, translate falls back to the default 13-language list.
+# Example:
+# mail:
+#     translate:
+#         languages: [en, fr, de, it]
