@@ -64,6 +64,8 @@ def upload_translations(base_key: str, translations: Translations, tags: List[st
         for lang, entry in translations.entries.items():
             if entry.plurals and quantity in entry.plurals:
                 per_language[lang] = entry.plurals[quantity]
+        # Defensive: with consistency-checked input every iterated quantity has
+        # at least one language; skip rather than push an empty key just in case.
         if not per_language:
             continue
         derived_key = f"{base_key}-{quantity}"

@@ -4,6 +4,7 @@
 import argparse
 import glob
 import pathlib
+import re
 import signal
 import subprocess
 import sys
@@ -657,16 +658,21 @@ class TranslationSeedAction(argparse.Action):
             seeds = {}
             setattr(namespace, "seeds", seeds)
 
-        is_pair = "=" in values
-        if is_pair:
-            quantity, _, value = values.partition("=")
-            quantity = quantity.strip()
+        # Treat the value as a `quantity=value` pair only when the prefix before
+        # the first `=` is a bare lowercase identifier (matching how the CLI is
+        # documented). This way singular values that legitimately contain `=`
+        # (e.g. `formula: x=y`) are not misinterpreted, while typos like
+        # `--pl two=oops` still surface a clear error rather than silently
+        # being stored as a singular value.
+        pair_match = re.match(r"^([a-z]+)=", values)
+        if pair_match:
+            quantity = pair_match.group(1)
+            value = values[pair_match.end():]
             if quantity not in self.allowed_plural_quantities:
                 parser.error(
                     f"{option_string}: unknown plural quantity '{quantity}'. "
                     f"Allowed for {self.language}: {', '.join(sorted(self.allowed_plural_quantities))}."
                 )
-
             existing = seeds.get(self.language)
             if existing is None:
                 seeds[self.language] = {quantity: value}

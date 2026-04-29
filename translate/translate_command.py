@@ -100,6 +100,6 @@ def run(args) -> None:
         raise SystemExit(1)
 
     project_tag = config.get_project("loco", "tag", raise_error=False)
-    tags = list(dict.fromkeys([t for t in ([project_tag] + extra_tags) if t]))
+    tags = list(dict.fromkeys(filter(None, [project_tag] + extra_tags)))
 
     upload_translations(base_key, full, tags)
