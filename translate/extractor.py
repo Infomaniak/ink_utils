@@ -18,7 +18,7 @@ from translate.translation import LocaleEntry, Translations
 _LINE_PATTERN = re.compile(
     r"""^\s*
         (?P<code>[A-Za-z]{2,3})                       # language code (no region)
-        (?:[-.](?P<quantity>one|other|few|many|two|zero))?
+        (?:[-.](?P<quantity>one|other|few|many))?     # plural quantity (matches PLURAL_QUANTITIES)
         \s*[:=]\s*
         (?P<value>.+?)
         \s*$""",
