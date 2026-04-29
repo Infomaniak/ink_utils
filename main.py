@@ -21,6 +21,8 @@ import projects
 from adb import adb, select_device, close_app, open_app, select_device_or_all, warn_if_current_project_app_is_not_focused
 from adb_prop import show_layout_bounds, show_layout_bars
 from common_utils import select_in_list, accept_substitution, ink_folder, cancel_ink_command
+from translate import translate_command
+from translate.languages import allowed_quantities, get_languages_for_project
 from updater import check_for_updates, rm_cache as update_rm_cache, update_git_project, update_cmd
 
 
@@ -630,6 +632,94 @@ def define_commands(parser):
                                               help="modifies the code of the projet to make cross app login work on preprod")
     add_project_arg(new_module_parser)
     new_module_parser.set_defaults(func=cross_app_login_config.add_preprod_cross_app_login_config)
+
+    # Translate
+    add_translate_subparser(subparsers)
+
+
+class TranslationSeedAction(argparse.Action):
+    """Accumulate per-language translation seeds.
+
+    Accepts either a bare string (singular form) or `quantity=value` pairs
+    (plural form). Mixing both forms for the same language raises an error.
+    The collected seeds are stored on `args.seeds` as a dict
+    `{language: str | {quantity: str}}`.
+    """
+
+    def __init__(self, option_strings, dest, language=None, allowed_plural_quantities=None, **kwargs):
+        self.language = language
+        self.allowed_plural_quantities = set(allowed_plural_quantities or [])
+        super().__init__(option_strings, dest, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        seeds = getattr(namespace, "seeds", None)
+        if seeds is None:
+            seeds = {}
+            setattr(namespace, "seeds", seeds)
+
+        is_pair = "=" in values
+        if is_pair:
+            quantity, _, value = values.partition("=")
+            quantity = quantity.strip()
+            if quantity not in self.allowed_plural_quantities:
+                parser.error(
+                    f"{option_string}: unknown plural quantity '{quantity}'. "
+                    f"Allowed for {self.language}: {', '.join(sorted(self.allowed_plural_quantities))}."
+                )
+
+            existing = seeds.get(self.language)
+            if existing is None:
+                seeds[self.language] = {quantity: value}
+            elif isinstance(existing, dict):
+                if quantity in existing:
+                    parser.error(
+                        f"{option_string}: plural quantity '{quantity}' was already provided for {self.language}."
+                    )
+                existing[quantity] = value
+            else:
+                parser.error(
+                    f"{option_string}: cannot mix singular and plural forms for {self.language}."
+                )
+        else:
+            if self.language in seeds:
+                parser.error(
+                    f"{option_string}: a value for {self.language} was already provided "
+                    "(or you mixed singular and plural forms)."
+                )
+            seeds[self.language] = values
+
+
+def add_translate_subparser(subparsers):
+    translate_parser = subparsers.add_parser(
+        "translate",
+        help="generate missing translations from a few seed values using AI and upload them"
+    )
+    translate_parser.add_argument(
+        "key",
+        help="base translation key to upload (e.g. 'confirm_button')"
+    )
+    translate_parser.add_argument(
+        "-t", "--tag", dest="tags", action="append", default=[],
+        help="extra tag to attach to the uploaded key (repeatable)"
+    )
+
+    languages = get_languages_for_project()
+    for language in languages:
+        translate_parser.add_argument(
+            f"--{language}",
+            dest="seeds",
+            action=TranslationSeedAction,
+            language=language,
+            allowed_plural_quantities=allowed_quantities(language),
+            metavar="VALUE | QUANTITY=VALUE",
+            help=(
+                f"seed translation for {language}. "
+                f"Singular: --{language} \"text\". "
+                f"Plural (repeat per quantity): --{language} one=\"...\" --{language} other=\"...\""
+            ),
+        )
+
+    translate_parser.set_defaults(func=translate_command.run, seeds=None)
 
 
 if __name__ == '__main__':
