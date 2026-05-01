@@ -61,12 +61,12 @@ def run(args) -> None:
     if missing:
         prompt = construct_prompt(seeds, languages)
         response_text = generate_translations(prompt)
-        generated = parse_response(response_text, languages)
+        generated_translations = parse_response(response_text, languages)
 
         # Re-verify the AI output using the same rules so a bad model response
         # fails fast with a clear error.
         generated_seeds: Dict[str, SeedValue] = {}
-        for lang, entry in generated.entries.items():
+        for lang, entry in generated_translations.entries.items():
             if entry.is_plural():
                 generated_seeds[lang] = dict(entry.plurals)
             else:
@@ -87,7 +87,7 @@ def run(args) -> None:
             )
             raise SystemExit(1)
 
-        full = _merge_translations(seeds_translations, generated)
+        full = _merge_translations(seeds_translations, generated_translations)
     else:
         full = seeds_translations
 

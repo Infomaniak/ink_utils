@@ -26,7 +26,7 @@ def upload_key(key: str, translations_per_language: Dict[str, str], tags: List[s
     `tags` is the list of tags to attach on the backend.
     """
     # TODO: replace with the real backend HTTP call once the endpoint shape is
-    # finalized. Kept as a stub so the orchestration layer can be exercised.
+    #  finalized. Kept as a stub so the orchestration layer can be exercised.
     print(f"[upload] key={key} tags={tags}")
     for lang, value in translations_per_language.items():
         print(f"  {lang}: {value}")
@@ -43,11 +43,13 @@ def upload_translations(base_key: str, translations: Translations, tags: List[st
     if not translations.entries:
         raise ValueError("No translations to upload.")
 
-    if not translations.is_plural():
-        per_language = {lang: entry.singular for lang, entry in translations.entries.items()}
-        upload_key(base_key, per_language, tags)
-        return
+    if translations.is_plural():
+        _upload_plural_key(base_key, tags, translations)
+    else:
+        _upload_plain_key(base_key, tags, translations)
 
+
+def _upload_plural_key(base_key: str, tags: list[str], translations: Translations):
     # Plural mode: collect the union of quantities present across languages.
     # `verify_seed_consistency` ensures each language carries exactly its
     # allowed set, so the union is well defined.
@@ -68,5 +70,10 @@ def upload_translations(base_key: str, translations: Translations, tags: List[st
         # at least one language; skip rather than push an empty key just in case.
         if not per_language:
             continue
-        derived_key = f"{base_key}-{quantity}"
+        derived_key = f"{base_key}-{quantity}"  # TODO: fix this with the correct formatting we use
         upload_key(derived_key, per_language, tags)
+
+
+def _upload_plain_key(base_key: str, tags: list[str], translations: Translations):
+    per_language = {lang: entry.singular for lang, entry in translations.entries.items()}
+    upload_key(base_key, per_language, tags)
