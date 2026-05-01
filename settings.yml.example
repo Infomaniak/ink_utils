@@ -22,6 +22,7 @@ ksuite:
 global:
     loco:
         core_key: ZZZ
+        translation_endpoint: https://.../openai
     login:
         id: bob@infomaniak.com
         pwd: 1234

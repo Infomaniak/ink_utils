@@ -7,6 +7,7 @@ from translate.ai_client import generate_translations
 from translate.extractor import parse_response
 from translate.languages import get_languages_for_project
 from translate.prompt_builder import construct_prompt, is_plural_mode
+from translate.spinner import Spinner
 from translate.translation import LocaleEntry, Translations
 from translate.uploader import upload_translations
 from translate.validation import (
@@ -74,7 +75,10 @@ def run(args) -> None:
 
     if missing:
         prompt = construct_prompt(seeds, languages)
+        spinner = Spinner("Generating translations...")
+        spinner.start()
         response_text = generate_translations(prompt)
+        spinner.stop()
         generated_translations = parse_response(response_text, languages)
 
         # Re-verify the AI output using the same rules so a bad model response
