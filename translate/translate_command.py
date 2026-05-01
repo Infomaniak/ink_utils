@@ -34,6 +34,20 @@ def _merge_translations(seeds: Translations, generated: Translations) -> Transla
     return Translations(entries=merged)
 
 
+def prompt_for_confirmation(full: Translations):
+    for lang, entry in full.entries.items():
+        print(f"{lang}: {format_locale_entry(entry)}")
+    print()
+    return input("Are the following translations correct? [Y/n]: ").lower() or "y" == "y"
+
+
+def format_locale_entry(entry: LocaleEntry) -> str:
+    if entry.is_plural():
+        return "\n" + "\n".join([f"    {form}: {plural}" for form, plural in entry.plurals])
+    else:
+        return entry.singular
+
+
 def run(args) -> None:
     seeds: Dict[str, SeedValue] = getattr(args, "seeds", None) or {}
     base_key: str = args.key
@@ -97,6 +111,10 @@ def run(args) -> None:
             "Translations are missing for the following languages after AI "
             f"generation: {', '.join(still_missing)}"
         )
+        raise SystemExit(1)
+
+    is_valid = prompt_for_confirmation(full)
+    if not is_valid:
         raise SystemExit(1)
 
     project_tag = config.get_project("loco", "tag", raise_error=False)
