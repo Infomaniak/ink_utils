@@ -9,14 +9,17 @@ The backend API only accepts a single key per call, so this module exposes:
                               key in singular mode) and calls `upload_key` for
                               each of them.
 
-The actual HTTP call inside `upload_key` is left as a stub; the orchestration
-logic above doesn't need to know how the request is shaped.
 """
 
 from typing import Dict, List
 
+import requests
+
+import config
 from translate.languages import allowed_quantities
 from translate.translation import Translations
+
+_LOCO_IMPORT_URL = "https://localise.biz/api/import/json"
 
 
 def upload_key(key: str, translations_per_language: Dict[str, str], tags: List[str]) -> None:
@@ -25,11 +28,29 @@ def upload_key(key: str, translations_per_language: Dict[str, str], tags: List[s
     `translations_per_language` maps language code -> translated value.
     `tags` is the list of tags to attach on the backend.
     """
-    # TODO: replace with the real backend HTTP call once the endpoint shape is
-    #  finalized. Kept as a stub so the orchestration layer can be exercised.
-    print(f"[upload] key={key} tags={tags}")
+    api_key = config.get_project("loco", "loco_key")
+    tags_param = ",".join(tags) if tags else None
+
     for lang, value in translations_per_language.items():
-        print(f"  {lang}: {value}")
+        params = {
+            "key": api_key,
+            "locale": lang,
+        }
+        if tags_param:
+            params["tag-new"] = tags_param
+            params["tag-existing"] = tags_param
+
+        response = requests.post(
+            _LOCO_IMPORT_URL,
+            params=params,
+            json={key: value},
+        )
+
+        if not response.ok:
+            raise RuntimeError(
+                f"Failed to upload key '{key}' for locale '{lang}': "
+                f"{response.status_code} {response.reason}"
+            )
 
 
 def upload_translations(base_key: str, translations: Translations, tags: List[str]) -> None:
