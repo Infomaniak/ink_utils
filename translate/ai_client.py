@@ -12,13 +12,14 @@ def generate_translations(prompt: str) -> str:
     Replace this stub with the actual provider call (HTTP request, SDK, ...).
     Until then, raises so callers can't silently get an empty result.
     """
-    return _translate_using_openai(prompt, endpoint=config.get_global("loco", "translation_endpoint"))
+    return _translate_using_openai(prompt, endpoint=config.get_global("loco", "translation_endpoint"),
+                                   bearer_token=config.get_global("loco", "translation_api_key"))
 
 
-def _translate_using_openai(prompt: str, endpoint: str) -> Any:
+def _translate_using_openai(prompt: str, endpoint: str, bearer_token: str) -> Any:
     url = endpoint + "/v1/chat/completions"
     headers = {
-        "Authorization": "Bearer",
+        "Authorization": "Bearer " + bearer_token,
         "Content-Type": "application/json"
     }
     payload = {
