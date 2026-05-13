@@ -2,7 +2,6 @@
 
 from typing import Dict, List, Union
 
-import config
 from translate.ai_client import generate_translations
 from translate.extractor import parse_response
 from translate.languages import get_languages_for_project
@@ -51,8 +50,8 @@ def format_locale_entry(entry: LocaleEntry) -> str:
 
 def run(args) -> None:
     seeds: Dict[str, SeedValue] = getattr(args, "seeds", None) or {}
-    base_key: str = args.key
-    extra_tags: List[str] = list(args.tags or [])
+    string_key: str = args.key
+    string_tags: List[str] = list(args.tags or [])
 
     languages = get_languages_for_project()
 
@@ -121,7 +120,7 @@ def run(args) -> None:
     if not is_valid:
         raise SystemExit(1)
 
-    project_tag = config.get_project("loco", "tag", raise_error=False)
-    tags = list(dict.fromkeys(filter(None, [project_tag] + extra_tags)))
+    if string_key is None:
+        string_key = input("Input the string ID to use (ex: sentFilesTitle): ")
 
-    upload_translations(base_key, full, tags)
+    upload_translations(string_key, full, string_tags)

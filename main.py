@@ -701,12 +701,16 @@ def add_translate_subparser(subparsers):
         help="generate missing translations from a few seed values using AI and upload them"
     )
     translate_parser.add_argument(
-        "key",
-        help="base translation key to upload (e.g. 'confirm_button')"
+        "context",
+        help="description for the AI to know in what context the translation will be used and give extra guidance"
     )
     translate_parser.add_argument(
         "-t", "--tag", dest="tags", action="append", default=[],
         help="extra tag to attach to the uploaded key (repeatable)"
+    )
+    translate_parser.add_argument(
+        "-k", "--key", dest="key",
+        help="base translation key to upload (e.g. 'buttonConfirm')"
     )
 
     languages = get_languages_for_project()

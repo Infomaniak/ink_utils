@@ -11,9 +11,10 @@ class Spinner:
         'dots': ['⢄', '⢂', '⢁', '⡁', '⡈', '⡐', '⡠'],
         'flow': ['▹▹▹▹▹', '▸▹▹▹▹', '▹▸▹▹▹', '▹▹▸▹▹', '▹▹▹▸▹', '▹▹▹▹▸'],
         'clock': ['🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚', '🕛'],
+        'stars': ['·', '✻', '✽', '✶', '✳', '✢'],
     }
 
-    def __init__(self, message="Processing...", style='braille'):
+    def __init__(self, message="Processing...", style='stars'):
         self.message = message
         self.frames = self.STYLES.get(style, self.STYLES['simple'])
         self.stop_event = threading.Event()
