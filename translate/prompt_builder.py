@@ -35,6 +35,12 @@ def construct_prompt(seeds: Dict[str, SeedValue], languages: List[str]) -> str:
         "Preserve placeholders (e.g. %s, %1$d, {n}, %@), punctuation style, and tone.",
         "Do not add explanations, do not wrap the output in code fences, output only the requested lines.",
         "",
+        "Always aim for the european versions of each language when applicable.",
+        "Always aim for swiss german when translating for german when applicable.",
+        "Use the most natural wording for these specific variants so they don't feel foreign when reading.",
+        "",
+        "When translating 'transfer' / 'transfert' take it as a file transfer not a money transfer unless otherwise indicated.",
+        "",
         "Provided translations (use these as the source of truth):",
     ]
 
