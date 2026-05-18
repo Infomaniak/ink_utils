@@ -1,5 +1,5 @@
 """Top-level orchestration for the `ink translate` command."""
-
+import sys
 from typing import Dict, List, Union
 
 from common_utils import select_in_list, cancel_ink_command
@@ -54,11 +54,27 @@ def format_locale_entry(entry: LocaleEntry) -> str:
 
 
 def run(args) -> None:
+    languages = get_languages_for_project()
     seeds: Dict[str, SeedValue] = getattr(args, "seeds", None) or {}
+
+    # Automatically read piped stdin as the translation from the API if they match the pattern
+    if not sys.stdin.isatty():
+        stdin_text = sys.stdin.read().strip()
+
+        if stdin_text:
+            parsed = parse_response(stdin_text, languages)
+
+            if len(parsed.entries) > 0:  # Only override seeds with stdin if there's at least one valid translation
+                stdin_seeds: Dict[str, SeedValue] = {}
+                for language, entry in parsed.entries.items():
+                    if entry.is_plural():
+                        stdin_seeds[language] = entry.plurals
+                    else:
+                        stdin_seeds[language] = entry.singular
+
+                seeds = stdin_seeds
     string_key: str = args.key
     string_tags: List[str] = list(args.tags or [])
-
-    languages = get_languages_for_project()
 
     try:
         verify_seed_consistency(seeds)
