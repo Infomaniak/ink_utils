@@ -9,7 +9,7 @@ from translate.languages import get_languages_for_project
 from translate.prompt_builder import construct_prompt, is_plural_mode
 from translate.spinner import Spinner
 from translate.translation import LocaleEntry, Translations
-from translate.uploader import upload_translations
+from translate.uploader import upload_translations, is_key_already_present
 from translate.validation import (
     TranslationConsistencyError,
     verify_seed_consistency,
@@ -79,6 +79,10 @@ def run(args) -> None:
 
     if string_key == "":
         print("Empty string ID is not authorized")
+        raise SystemExit(1)
+
+    if is_key_already_present(string_key):
+        print("Key already exists, aborting to avoid overriding assets")
         raise SystemExit(1)
 
     if len(string_tags) == 0:

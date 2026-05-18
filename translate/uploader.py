@@ -10,14 +10,44 @@ The backend API only accepts a single key per call, so this module exposes:
                               each of them.
 
 """
-
 from typing import Dict, List
+
+import requests
 
 import config
 from translate.languages import allowed_quantities
 from translate.translation import Translations
 
 _LOCO_IMPORT_URL = "https://localise.biz/api/import/json"
+_LOCO_ASSETS_URL = "https://localise.biz/api/assets"
+
+
+def is_key_already_present(key: str) -> bool:
+    """
+    Returns True if the localisation key exists in on the remote, otherwise returns False.
+    """
+
+    url = f"{_LOCO_ASSETS_URL}/{key}"
+    headers = {
+        "Authorization": f"Loco {config.get_project('loco', 'loco_key')}",
+    }
+
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+
+        if response.status_code == 200:
+            return True
+
+        if response.status_code == 404:
+            return False
+
+        # Raise unexpected API errors
+        response.raise_for_status()
+
+    except requests.RequestException as exception:
+        raise RuntimeError(f"Failed to check key existence: {exception}") from exception
+
+    return False
 
 
 def upload_key(key: str, translations_per_language: Dict[str, str], tags: List[str]) -> None:
