@@ -1,7 +1,6 @@
 import importlib.util
 import os
 import random
-import sys
 
 import inquirer
 from inquirer.themes import Default as DefaultTheme
@@ -63,4 +62,4 @@ def cancel_ink_command(message_end='\n', exit_code=0):
     else:
         cancel_author = "user"
     print(f'\nOperation cancelled by {cancel_author}', end=message_end)
-    sys.exit(exit_code)
+    raise SystemExit(exit_code)

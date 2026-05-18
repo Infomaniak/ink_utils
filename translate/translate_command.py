@@ -2,6 +2,7 @@
 
 from typing import Dict, List, Union
 
+from common_utils import select_in_list, cancel_ink_command
 from translate.ai_client import generate_translations
 from translate.extractor import parse_response
 from translate.languages import get_languages_for_project
@@ -34,11 +35,15 @@ def _merge_translations(seeds: Translations, generated: Translations) -> Transla
     return Translations(entries=merged)
 
 
-def prompt_for_confirmation(full: Translations):
+def prompt_for_confirmation(string_key: str, full: Translations, string_tags: List[str]) -> bool:
+    print()
     for lang, entry in full.entries.items():
         print(f"{lang}: {format_locale_entry(entry)}")
     print()
-    return input("Are the following translations correct? [Y/n]: ").lower() or "y" == "y"
+    print(f"id: {string_key}")
+    print(f"tags: {string_tags}")
+    print()
+    return (input("Are the following translations correct? [Y/n]: ").lower() or "y") == "y"
 
 
 def format_locale_entry(entry: LocaleEntry) -> str:
@@ -69,12 +74,23 @@ def run(args) -> None:
         )
         raise SystemExit(1)
 
+    if string_key is None:
+        string_key = input("Input the string ID to use (ex: sentFilesTitle): ")
+
+    if len(string_tags) == 0:
+        choices = ["android, ios", "android", "custom tags…"]
+        tag_choice = select_in_list("Select tags for this string", choices)
+        if tag_choice == "custom tags…":
+            tag_choice = input("Input the coma separated tags (ex: android, ios, my kSuite): ")
+
+        string_tags = [el.strip() for el in tag_choice.split(",")]
+
     seeds_translations = _seeds_to_translations(seeds)
     missing = seeds_translations.missing_languages(languages)
 
     if missing:
         prompt = construct_prompt(seeds, languages)
-        spinner = Spinner("Generating translations...")
+        spinner = Spinner("Generating translations…")
         spinner.start()
         response_text = generate_translations(prompt)
         spinner.stop()
@@ -116,11 +132,8 @@ def run(args) -> None:
         )
         raise SystemExit(1)
 
-    is_valid = prompt_for_confirmation(full)
+    is_valid = prompt_for_confirmation(string_key, full, string_tags)
     if not is_valid:
-        raise SystemExit(1)
-
-    if string_key is None:
-        string_key = input("Input the string ID to use (ex: sentFilesTitle): ")
+        cancel_ink_command()
 
     upload_translations(string_key, full, string_tags)

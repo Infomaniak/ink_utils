@@ -1,7 +1,8 @@
-import threading
-import sys
-import time
 import itertools
+import sys
+import threading
+import time
+
 
 class Spinner:
     STYLES = {
@@ -14,7 +15,7 @@ class Spinner:
         'stars': ['·', '✻', '✽', '✶', '✳', '✢'],
     }
 
-    def __init__(self, message="Processing...", style='stars'):
+    def __init__(self, message="Processing…", style='clock'):
         self.message = message
         self.frames = self.STYLES.get(style, self.STYLES['simple'])
         self.stop_event = threading.Event()

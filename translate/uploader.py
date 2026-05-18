@@ -13,8 +13,6 @@ The backend API only accepts a single key per call, so this module exposes:
 
 from typing import Dict, List
 
-import requests
-
 import config
 from translate.languages import allowed_quantities
 from translate.translation import Translations
