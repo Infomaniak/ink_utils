@@ -706,7 +706,7 @@ def add_translate_subparser(subparsers):
     )
     translate_parser.add_argument(
         "-t", "--tag", dest="tags", action="append", default=[],
-        help="extra tag to attach to the uploaded key (repeatable)"
+        help="tag to use for the new translation (repeatable) (e.g. 'android' or 'ios')"
     )
     translate_parser.add_argument(
         "-k", "--key", dest="key",
