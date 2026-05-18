@@ -88,6 +88,7 @@ def run(args) -> None:
     seeds_translations = _seeds_to_translations(seeds)
     missing = seeds_translations.missing_languages(languages)
 
+    response_text = None
     if missing:
         prompt = construct_prompt(seeds, languages)
         spinner = Spinner("Generating translations…")
@@ -127,8 +128,12 @@ def run(args) -> None:
     still_missing = full.missing_languages(languages)
     if still_missing:
         print(
+            "\n"
             "Translations are missing for the following languages after AI "
             f"generation: {', '.join(still_missing)}"
+            "\n\n"
+            "AI ouput:"
+            f"{response_text}"
         )
         raise SystemExit(1)
 
