@@ -19,7 +19,7 @@ def is_plural_mode(seeds: Dict[str, SeedValue]) -> bool:
     return isinstance(sample, dict)
 
 
-def construct_prompt(seeds: Dict[str, SeedValue], languages: List[str]) -> str:
+def construct_prompt(seeds: Dict[str, SeedValue], languages: List[str], prompt_context: Union[str, None]) -> str:
     """Construct the AI prompt asking for the missing translations.
 
     The output format the model is asked to follow uses the `<code>-<quantity>`
@@ -63,5 +63,12 @@ def construct_prompt(seeds: Dict[str, SeedValue], languages: List[str]) -> str:
         lines.append("")
         lines.append(f"Generate translations for these languages: {', '.join(missing)}")
         lines.append("Output one line per language in the format `<code>: <translation>`.")
+
+    if prompt_context:
+        lines.append("")
+        lines.append(
+            "The user has provided extra context to better understand where this translation is used or how to correctly translate it. Here is the user input in its own language:"
+        )
+        lines.append(prompt_context)
 
     return "\n".join(lines)

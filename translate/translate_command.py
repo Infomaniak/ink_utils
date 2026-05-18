@@ -56,6 +56,7 @@ def format_locale_entry(entry: LocaleEntry) -> str:
 def run(args) -> None:
     languages = get_languages_for_project()
     seeds: Dict[str, SeedValue] = getattr(args, "seeds", None) or {}
+    prompt_context = args.context
 
     # Automatically read piped stdin as the translation from the API if they match the pattern
     if not sys.stdin.isatty():
@@ -73,6 +74,8 @@ def run(args) -> None:
                         stdin_seeds[language] = entry.singular
 
                 seeds = stdin_seeds
+                prompt_context = None
+
     string_key: str = args.key
     string_tags: List[str] = list(args.tags or [])
 
@@ -114,7 +117,7 @@ def run(args) -> None:
 
     response_text = None
     if missing:
-        prompt = construct_prompt(seeds, languages)
+        prompt = construct_prompt(seeds, languages, prompt_context)
         spinner = Spinner("Generating translations…")
         spinner.start()
         response_text = generate_translations(prompt)
