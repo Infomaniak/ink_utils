@@ -77,6 +77,10 @@ def run(args) -> None:
     if string_key is None:
         string_key = input("Input the string ID to use (ex: sentFilesTitle): ")
 
+    if string_key == "":
+        print("Empty string ID is not authorized")
+        raise SystemExit(1)
+
     if len(string_tags) == 0:
         choices = ["android, ios", "android", "custom tags…"]
         tag_choice = select_in_list("Select tags for this string", choices)
