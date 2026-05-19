@@ -49,7 +49,7 @@ def prompt_for_confirmation(string_key: str, full: Translations, string_tags: Li
 
 def format_locale_entry(entry: LocaleEntry) -> str:
     if entry.is_plural():
-        return "\n" + "\n".join([f"    {form}: {plural}" for form, plural in entry.plurals])
+        return "\n" + "\n".join([f"    {form}: {plural}" for form, plural in entry.plurals.items()])
     else:
         return entry.singular
 
