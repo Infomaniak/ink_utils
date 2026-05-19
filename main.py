@@ -702,6 +702,7 @@ def add_translate_subparser(subparsers):
     )
     translate_parser.add_argument(
         "context",
+        nargs="*",
         help="description for the AI to know in what context the translation will be used and give extra guidance. If piping a "
              "multiline text with each line of the form `<locale>: <translation>` it will replace the command seeds argument "
              "instead. This will only take effect if at least one translation is correctly formatted and provided this way"

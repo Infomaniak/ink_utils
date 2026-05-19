@@ -61,6 +61,7 @@ def run(args) -> None:
     # Automatically read piped stdin as the translation from the API if they match the pattern
     if not sys.stdin.isatty():
         stdin_text = sys.stdin.read().strip()
+        sys.stdin = open("/dev/tty")
 
         if stdin_text:
             parsed = parse_response(stdin_text, languages)
