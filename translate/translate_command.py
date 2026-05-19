@@ -12,7 +12,7 @@ from translate.translation import LocaleEntry, Translations
 from translate.uploader import upload_translations, is_key_already_present
 from translate.validation import (
     TranslationConsistencyError,
-    verify_seed_consistency,
+    verify_seed_consistency, has_single_locale,
 )
 
 SeedValue = Union[str, Dict[str, str]]
@@ -91,6 +91,16 @@ def run(args) -> None:
             f"({', '.join(languages)}): {', '.join(sorted(unknown))}"
         )
         raise SystemExit(1)
+
+    are_seeds_single_locale = has_single_locale(seeds)
+    if are_seeds_single_locale:
+        prompt = (
+            "\nOnly one locale was provided. This will reduce translation quality and cause ambiguity for words with multiple "
+            "meanings. Do you want to continue? [y/N]: "
+        )
+        should_continue = (input(prompt).lower() or "n") == "y"
+        if not should_continue:
+            raise SystemExit(1)
 
     if string_key is None:
         string_key = input("Input the string ID to use (ex: sentFilesTitle): ")

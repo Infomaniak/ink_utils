@@ -8,10 +8,9 @@ Failing fast with a clear error message is the goal — the rest of the
 translate pipeline assumes a clean, uniform input.
 """
 
-from typing import Dict, Union
+from typing import Dict, Union, Set
 
 from translate.languages import allowed_quantities
-
 
 SeedValue = Union[str, Dict[str, str]]
 
@@ -80,3 +79,7 @@ def verify_seed_consistency(seeds: Dict[str, SeedValue]) -> None:
                 "Plural quantities don't match the expected set for these languages:\n"
                 + "\n".join(errors)
             )
+
+
+def has_single_locale(seeds: Dict[str, SeedValue]) -> bool:
+    return len(seeds) == 1
