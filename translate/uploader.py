@@ -10,12 +10,12 @@ The backend API only accepts a single key per call, so this module exposes:
                               each of them.
 
 """
+import xml.etree.ElementTree as ET
 from typing import Dict, List
 
 import requests
 
 import config
-from translate.languages import allowed_quantities
 from translate.translation import Translations
 
 _LOCO_IMPORT_URL = "https://localise.biz/api/import/json"
@@ -102,29 +102,68 @@ def upload_translations(base_key: str, translations: Translations, tags: List[st
         _upload_plain_key(base_key, tags, translations)
 
 
-def _upload_plural_key(base_key: str, tags: list[str], translations: Translations):
-    # Plural mode: collect the union of quantities present across languages.
-    # `verify_seed_consistency` ensures each language carries exactly its
-    # allowed set, so the union is well defined.
-    quantities_in_order: List[str] = []
-    seen = set()
-    for lang in translations.entries:
-        for quantity in allowed_quantities(lang):
-            if quantity not in seen:
-                seen.add(quantity)
-                quantities_in_order.append(quantity)
+def _build_android_xml(base_key: str, plurals: Dict[str, str]) -> bytes:
+    """
+    Build Android strings XML in memory with plurals.
+    Produces a valid <resources> document containing a single <plurals> element
+    with one <item> per quantity form.
 
-    for quantity in quantities_in_order:
-        per_language = {}
-        for lang, entry in translations.entries.items():
-            if entry.plurals and quantity in entry.plurals:
-                per_language[lang] = entry.plurals[quantity]
-        # Defensive: with consistency-checked input every iterated quantity has
-        # at least one language; skip rather than push an empty key just in case.
-        if not per_language:
+    `plurals` maps quantity (e.g. "one", "other", "few") to the translated string.
+    """
+
+    resources = ET.Element("resources")
+    plurals_elem = ET.SubElement(resources, "plurals")
+    plurals_elem.set("name", base_key)
+
+    for quantity, value in plurals.items():
+        item = ET.SubElement(plurals_elem, "item")
+        item.set("quantity", quantity)
+        item.text = value
+
+    return ET.tostring(resources, encoding="UTF-8", xml_declaration=True)
+
+
+def _upload_plural_key(base_key: str, tags: list[str], translations: Translations):
+    """Upload a plural key by importing one Android XML per locale.
+
+    Each locale may have a different set of quantity forms (e.g. "one"/"other"
+    for English, "one"/"few"/"many"/"other" for Polish). We build and upload a
+    complete XML per locale so all plural forms are sent together.
+    """
+    tags_param = ",".join(tags) if tags else None
+
+    for lang, entry in translations.entries.items():
+        if not entry.plurals:
             continue
-        derived_key = f"{base_key}-{quantity}"  # TODO: fix this with the correct formatting we use
-        upload_key(derived_key, per_language, tags)
+
+        xml_bytes = _build_android_xml(base_key, entry.plurals)
+
+        params = {
+            "locale": lang,
+            "index": "id",
+        }
+        if tags_param:
+            params["tag-new"] = tags_param
+            params["tag-existing"] = tags_param
+
+        response = requests.post(
+            "https://localise.biz/api/import/xml",
+            params=params,
+            headers={
+                "Authorization": f"Loco {config.get_project('loco', 'loco_key')}",
+                "Content-Type": "application/xml",
+            },
+            data=xml_bytes,
+        )
+
+        if not response.ok:
+            if response.status_code == 403:
+                print("Your loco api key doesn't have write permissions")
+                raise SystemExit(1)
+            raise RuntimeError(
+                f"Failed to import plural key '{base_key}' for locale '{lang}': "
+                f"{response.status_code} {response.text}"
+            )
 
 
 def _upload_plain_key(base_key: str, tags: list[str], translations: Translations):
