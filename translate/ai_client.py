@@ -31,7 +31,7 @@ def _translate_using_openai(prompt: str, endpoint: str, bearer_token: str) -> An
             }
         ]
     }
-    response = requests.post(url, headers=headers, json=payload)
+    response = requests.post(url, headers=headers, json=payload, timeout=300)  # 5 min timeout
     response.raise_for_status()  # Raise error if http error occurred
 
     return response.json()["choices"][0]["message"]["content"]
