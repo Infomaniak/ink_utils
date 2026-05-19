@@ -33,3 +33,5 @@ global:
     login:
         id: bob@infomaniak.com
         pwd: 1234
+    spinner:
+        type: clock # Animation to use for the spinner. Choose between: simple, braille, dots, clock, stars, random

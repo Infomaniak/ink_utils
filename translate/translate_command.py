@@ -2,6 +2,7 @@
 import sys
 from typing import Dict, List, Union
 
+import config
 from common_utils import select_in_list, cancel_ink_command
 from translate.ai_client import generate_translations
 from translate.extractor import parse_response
@@ -127,7 +128,8 @@ def run(args) -> None:
     response_text = None
     if missing:
         prompt = construct_prompt(seeds, languages, args.context)
-        spinner = Spinner("Generating translations…")
+        spinner_style = config.get_global("spinner", "type", raise_error=False) or "random"
+        spinner = Spinner(spinner_style, "Generating translations…")
         spinner.start()
         response_text = generate_translations(prompt)
         spinner.stop()

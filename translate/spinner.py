@@ -1,4 +1,5 @@
 import itertools
+import random
 import sys
 import threading
 import time
@@ -8,16 +9,17 @@ class Spinner:
     STYLES = {
         'simple': ['|', '/', '-', '\\'],
         'braille': ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'],
-        'arc': ['◐', '◓', '◑', '◒'],
         'dots': ['⢄', '⢂', '⢁', '⡁', '⡈', '⡐', '⡠'],
-        'flow': ['▹▹▹▹▹', '▸▹▹▹▹', '▹▸▹▹▹', '▹▹▸▹▹', '▹▹▹▸▹', '▹▹▹▹▸'],
         'clock': ['🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚', '🕛'],
         'stars': ['·', '✻', '✽', '✶', '✳', '✢'],
     }
 
-    def __init__(self, message="Processing…", style='clock'):
+    def __init__(self, style, message="Processing…"):
         self.message = message
-        self.frames = self.STYLES.get(style, self.STYLES['simple'])
+        if style == 'random':
+            self.frames = random.choice(list(self.STYLES.values()))
+        else:
+            self.frames = self.STYLES.get(style, self.STYLES['clock'])
         self.stop_event = threading.Event()
         self.thread = None
 
