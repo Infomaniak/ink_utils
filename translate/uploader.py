@@ -75,10 +75,14 @@ def upload_key(key: str, translations_per_language: Dict[str, str], tags: List[s
         )
 
         if not response.ok:
-            raise RuntimeError(
-                f"Failed to upload key '{key}' for locale '{lang}': "
-                f"{response.status_code} {response.reason}"
-            )
+            if response.status_code == 403:
+                print("Your loco api key doesn't have write permissions")
+                raise SystemExit(1)
+            else:
+                raise RuntimeError(
+                    f"Failed to upload key '{key}' for locale '{lang}': "
+                    f"{response.status_code} {response.reason}"
+                )
 
 
 def upload_translations(base_key: str, translations: Translations, tags: List[str]) -> None:

@@ -170,3 +170,5 @@ def run(args) -> None:
         cancel_ink_command()
 
     upload_translations(string_key, full, string_tags)
+
+    print(f"\nTranslations uploaded successfully")
