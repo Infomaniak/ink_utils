@@ -1,6 +1,11 @@
 mail:
     loco:
+        # Write access is only needed for `ink translate` when uploading keys, otherwise, a read access is enough.
         loco_key: XXX
+    # Optional per-project override for the language list used by `ink translate`.
+    # When omitted, translate falls back to the default 13-language list.
+    translate:
+        languages: [en, fr, de, it]
     global:
         package_name: com.infomaniak.mail
         project_root: /Users/.../android-mail/app
@@ -22,14 +27,9 @@ ksuite:
 global:
     loco:
         core_key: ZZZ
+        # Must be OpenAi-compatible. See handbook on how get these two values. /handbook/ia/documentation/start
         translation_endpoint: https://.../openai
+        translation_api_key: XXX
     login:
         id: bob@infomaniak.com
         pwd: 1234
-
-# Optional per-project override for the language list used by `ink translate`.
-# When omitted, translate falls back to the default 13-language list.
-# Example:
-# mail:
-#     translate:
-#         languages: [en, fr, de, it]

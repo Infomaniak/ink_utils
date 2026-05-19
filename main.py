@@ -701,8 +701,7 @@ def add_translate_subparser(subparsers):
         help="generate missing translations from a few seed values using AI and upload them"
     )
     translate_parser.add_argument(
-        "context",
-        nargs="*",
+        "-c", "--context", dest="context",
         help="description for the AI to know in what context the translation will be used and give extra guidance. If piping a "
              "multiline text with each line of the form `<locale>: <translation>` it will replace the command seeds argument "
              "instead. This will only take effect if at least one translation is correctly formatted and provided this way"

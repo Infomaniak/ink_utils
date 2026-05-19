@@ -14,6 +14,7 @@ alias ink="~/Documents/.../ink_utils/main.py"
 ```
 
 * Add execution capabilities to the script file so the previous alias works correctly
+
 ```
 chmod +x main.py
 ```
@@ -52,9 +53,39 @@ mail:
         project_root: /Users/.../android-mail/app
 ```
 
-The Loco API key only requires read access. To obtain your key, open the developer tools from the top-right menu in Loco.
+The Loco API key only requires write access for the `translate` command, otherwise read access is enough for the `loco` command.
+To obtain your key, open the developer tools from the top-right menu in Loco.
 
 ![loco_developer_tools.png](doc/loco_developer_tools.png)
+
+### Setup for translations
+
+To translate strings using ink, make sure you have a write-access Loco token configured for your project. You also need to
+configure the translation endpoint by specifying the OpenAI-compatible endpoint and the bearer token for authentication.
+Instructions for obtaining these two values can be found in the handbook under `/handbook/ia/documentation/start`.
+
+```yml
+global:
+    loco:
+        translation_endpoint: https://.../openai
+        translation_api_key: XXX
+```
+
+To use `ink translate`, you need to provide a maximum of source translations like
+`ink translate --context "Connexion button for the login page" --en "Login" --fr "Se connecter"` so there's a maximum of context
+to get the best result.
+
+Another way of providing source translation, is to pipe data into the command like with `cat | ink translation`. You can then
+paste multiline input following this structure:
+
+```
+en: Login
+fr: Se connecter
+de: Anmeldung
+```
+
+The different input will be automatically parsed and if all locales are provided, the translation process will be entirely skipped
+and the keys will directly be uploaded.
 
 ## Commands and documentation
 
