@@ -57,6 +57,10 @@ def format_locale_entry(entry: LocaleEntry) -> str:
 def run(args) -> None:
     languages = get_languages_for_project()
     seeds: Dict[str, SeedValue] = getattr(args, "seeds", None) or {}
+    if args.core:
+        loco_api_key = config.get_global("loco", "core_key")
+    else:
+        loco_api_key = config.get_project("loco", "loco_key")
 
     # Automatically read piped stdin as the translation from the API if they match the pattern
     if not sys.stdin.isatty():
@@ -110,7 +114,7 @@ def run(args) -> None:
         print("Empty string ID is not authorized")
         raise SystemExit(1)
 
-    if is_key_already_present(string_key):
+    if is_key_already_present(string_key, loco_api_key):
         print("Key already exists, aborting to avoid overriding assets")
         raise SystemExit(1)
 
@@ -179,6 +183,6 @@ def run(args) -> None:
     if not is_valid:
         cancel_ink_command()
 
-    upload_translations(string_key, full, string_tags)
+    upload_translations(string_key, full, string_tags, loco_api_key)
 
     print(f"\nTranslations uploaded successfully")

@@ -714,6 +714,10 @@ def add_translate_subparser(subparsers):
         "-k", "--key", dest="key",
         help="base translation key to upload (e.g. 'buttonConfirm')"
     )
+    translate_parser.add_argument(
+        "-C", "--core", dest="core", action="store_true", default=False,
+        help="if provided, the translation will be uploaded to CoreUI instead of the current project"
+    )
 
     languages = get_languages_for_project()
     for language in languages:

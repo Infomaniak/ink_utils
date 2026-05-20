@@ -15,21 +15,20 @@ from typing import Dict, List
 
 import requests
 
-import config
 from translate.translation import Translations
 
 _LOCO_IMPORT_URL = "https://localise.biz/api/import/json"
 _LOCO_ASSETS_URL = "https://localise.biz/api/assets"
 
 
-def is_key_already_present(key: str) -> bool:
+def is_key_already_present(key: str, loco_api_key) -> bool:
     """
     Returns True if the localisation key exists in on the remote, otherwise returns False.
     """
 
     url = f"{_LOCO_ASSETS_URL}/{key}"
     headers = {
-        "Authorization": f"Loco {config.get_project('loco', 'loco_key')}",
+        "Authorization": f"Loco {loco_api_key}",
     }
 
     try:
@@ -50,18 +49,17 @@ def is_key_already_present(key: str) -> bool:
     return False
 
 
-def upload_key(key: str, translations_per_language: Dict[str, str], tags: List[str]) -> None:
+def upload_key(key: str, translations_per_language: Dict[str, str], tags: List[str], loco_api_key: str) -> None:
     """Upload exactly one key with one value per language.
 
     `translations_per_language` maps language code -> translated value.
     `tags` is the list of tags to attach on the backend.
     """
-    api_key = config.get_project("loco", "loco_key")
     tags_param = ",".join(tags) if tags else None
 
     for lang, value in translations_per_language.items():
         params = {
-            "key": api_key,
+            "key": loco_api_key,
             "locale": lang,
         }
         if tags_param:
@@ -85,7 +83,7 @@ def upload_key(key: str, translations_per_language: Dict[str, str], tags: List[s
                 )
 
 
-def upload_translations(base_key: str, translations: Translations, tags: List[str]) -> None:
+def upload_translations(base_key: str, translations: Translations, tags: List[str], loco_api_key: str) -> None:
     """Orchestrate the upload of a `Translations` object as one or more keys.
 
     In singular mode this calls `upload_key` once with `base_key`.
@@ -97,9 +95,9 @@ def upload_translations(base_key: str, translations: Translations, tags: List[st
         raise ValueError("No translations to upload.")
 
     if translations.is_plural():
-        _upload_plural_key(base_key, tags, translations)
+        _upload_plural_key(base_key, tags, translations, loco_api_key)
     else:
-        _upload_plain_key(base_key, tags, translations)
+        _upload_plain_key(base_key, tags, translations, loco_api_key)
 
 
 def _build_android_xml(base_key: str, plurals: Dict[str, str]) -> bytes:
@@ -123,7 +121,7 @@ def _build_android_xml(base_key: str, plurals: Dict[str, str]) -> bytes:
     return ET.tostring(resources, encoding="UTF-8", xml_declaration=True)
 
 
-def _upload_plural_key(base_key: str, tags: list[str], translations: Translations):
+def _upload_plural_key(base_key: str, tags: list[str], translations: Translations, loco_api_key: str):
     """Upload a plural key by importing one Android XML per locale.
 
     Each locale may have a different set of quantity forms (e.g. "one"/"other"
@@ -150,7 +148,7 @@ def _upload_plural_key(base_key: str, tags: list[str], translations: Translation
             "https://localise.biz/api/import/xml",
             params=params,
             headers={
-                "Authorization": f"Loco {config.get_project('loco', 'loco_key')}",
+                "Authorization": f"Loco {loco_api_key}",
                 "Content-Type": "application/xml",
             },
             data=xml_bytes,
@@ -166,6 +164,6 @@ def _upload_plural_key(base_key: str, tags: list[str], translations: Translation
             )
 
 
-def _upload_plain_key(base_key: str, tags: list[str], translations: Translations):
+def _upload_plain_key(base_key: str, tags: list[str], translations: Translations, loco_api_key: str):
     per_language = {lang: entry.singular for lang, entry in translations.entries.items()}
-    upload_key(base_key, per_language, tags)
+    upload_key(base_key, per_language, tags, loco_api_key)
