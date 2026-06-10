@@ -30,7 +30,9 @@ def manually_get_project(root_key, section, key, raise_error=True):
     return _get(root_key, section, key, raise_error)
 
 
-def get_project_module_parent(root_key=project_key):
+def get_project_module_parent(root_key=None):
+    if root_key is None:
+        root_key = project_key
     return Path(manually_get_project(root_key, "global", "project_root")) / ".."
 
 
