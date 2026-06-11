@@ -1,5 +1,6 @@
 import os
 import subprocess
+from collections.abc import Iterable
 from enum import Enum, auto
 
 
@@ -76,19 +77,25 @@ def insert_before_line_or_warn(filepath, line_to_insert, line_to_match):
 
 
 def find_closest_parent_git_directory(current_directory):
+    find_closest_parent_directory_containing(current_directory, [".git", ".github"], )
+
+
+def find_closest_parent_directory_containing(current_directory: str, targets: Iterable[str], ) -> str | None:
     """
-    Walk up the directory tree starting from current_directory
-    and return the path to the nearest directory containing a .git folder.
+    Walk up the directory tree starting from current_directory and return
+    the nearest directory containing any of the specified files/directories.
+
+    Args:
+        current_directory: Starting directory.
+        targets: Names of files or directories to look for.
 
     Returns:
-        str | None: Path to the git root directory, or None if not found.
+        Path to the matching parent directory, or None if not found.
     """
     current_directory = os.path.abspath(current_directory)
 
     while True:
-        git_path = os.path.join(current_directory, ".git")
-        github_path = os.path.join(current_directory, ".github")
-        if os.path.isdir(git_path) or os.path.isdir(github_path):
+        if any(os.path.exists(os.path.join(current_directory, target)) for target in targets):
             return current_directory
 
         parent_directory = os.path.dirname(current_directory)

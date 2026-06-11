@@ -636,10 +636,10 @@ def define_commands(parser):
     new_module_parser.set_defaults(func=new_module.new_module)
 
     # Add lines needed for preprod cross app login to work
-    new_module_parser = subparsers.add_parser("crossapplogin",
+    cross_app_login_parser = subparsers.add_parser("crossapplogin",
                                               help="modifies the code of the projet to make cross app login work on preprod")
-    add_project_arg(new_module_parser)
-    new_module_parser.set_defaults(func=cross_app_login_config.add_preprod_cross_app_login_config)
+    add_project_arg(cross_app_login_parser)
+    cross_app_login_parser.set_defaults(func=cross_app_login_config.add_preprod_cross_app_login_config)
 
     # Translate
     add_translate_subparser(subparsers)
