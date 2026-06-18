@@ -27,11 +27,11 @@ def _create_android_module(parent_path, module_name, package_name):
 
 
 def add_include_in_closest_settings_gradle_kts(module_name, module_path: Any, package_name):
-    project_name = module_name.replace("/", ":")
+    project_name = ":" + module_name.replace("/", ":")
     if "/" in module_name:
-        project_name = module_name.split("/")[1:].replace("/", ":")
+        project_name = ":" + ":".join(module_name.split("/")[1:])
 
-    settings_gradle_folder = find_closest_parent_directory_containing(module_path, "settings.gradle.kts")
+    settings_gradle_folder = find_closest_parent_directory_containing(module_path, ["settings.gradle.kts"])
     if settings_gradle_folder is None:
         print(f"No gradle settings found for {package_name}, add `include(\"{project_name}\")` manually")
         raise SystemExit(1)
