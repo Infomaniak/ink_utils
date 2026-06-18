@@ -58,7 +58,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
     
 plugins {{
     // TODO: Choose only what's needed
-    id("com.android.library")
+    alias(core.plugins.android.library)
     alias(core.plugins.kotlin.android)
     alias(core.plugins.compose.compiler)
 }}
@@ -94,7 +94,14 @@ android {{
 
 dependencies {{
     // TODO: Choose only what's needed
+    
+    implementation(core.infomaniak.core.ui.compose.margin)
+
     implementation(platform(core.compose.bom))
-    implementation(core.compose.ui)
+    implementation(core.compose.foundation)
+    implementation(core.compose.material3)
+    implementation(core.compose.ui.android)
+    implementation(core.compose.ui.tooling.preview)
+    debugImplementation(core.compose.ui.tooling)
 }}
 """.strip()
