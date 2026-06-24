@@ -1,7 +1,7 @@
 # Copilot Coding Agent Onboarding — ink_utils (Ink)
 
 ## Overview
-Ink is a Python CLI tool that automates tedious development tasks for Infomaniak Android projects: importing translation strings from Loco, AI-assisted translation, ADB shortcuts, cross-app login config, and more. Entry point: `main.py`. The CLI alias is `ink`.
+Ink is a Python CLI tool that automates tedious development tasks for Infomaniak Android projects: importing translation strings from Loco, AI-assisted translation, ADB shortcuts, cross-app login config, and more. Entry point: `main.py`. Many devs use a shell alias `ink` pointing to it.
 
 **Language**: Python 3 (minimum 3.9). **No Android/Gradle**. Dependencies: `pyyaml`, `inquirer`, `requests` (see `requirements.txt`).
 
@@ -9,6 +9,9 @@ Ink is a Python CLI tool that automates tedious development tasks for Infomaniak
 ```bash
 python3 -m pip install -r requirements.txt   # install dependencies
 cp settings.yml.example settings.yml         # copy config template
+chmod +x main.py                             # allow running main.py directly
+# Optional convenience alias (e.g. in ~/.zshrc):
+# alias ink="/path/to/ink_utils/main.py"
 # Edit settings.yml: fill in project names, Loco API keys, ADB device paths, etc.
 ```
 `settings.yml` is git-ignored — never commit it.
@@ -17,7 +20,7 @@ cp settings.yml.example settings.yml         # copy config template
 ```bash
 python3 main.py --help               # print usage and available subcommands
 python3 main.py <subcommand>         # run a specific subcommand
-# Or via alias (after setup):
+# Or via the ink alias if configured:
 ink --help
 ink <subcommand>
 ```
