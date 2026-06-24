@@ -3,7 +3,7 @@
 ## Overview
 Ink is a Python CLI tool that automates tedious development tasks for Infomaniak Android projects: importing translation strings from Loco, AI-assisted translation, ADB shortcuts, cross-app login config, and more. Entry point: `main.py`. The CLI alias is `ink`.
 
-**Language**: Python 3 (minimum 3.6). **No Android/Gradle**. Dependencies: `pyyaml`, `inquirer`, `requests` (see `requirements.txt`).
+**Language**: Python 3 (minimum 3.7). **No Android/Gradle**. Dependencies: `pyyaml`, `inquirer`, `requests` (see `requirements.txt`).
 
 ## One-Time Setup
 ```bash
@@ -43,5 +43,5 @@ updater.py                # Self-update / git pull logic
 ## Key Rules
 - `settings.yml` is git-ignored — always update `settings.yml.example` when adding new config fields.
 - Keep the CLI backwards compatible — `ink` is used as a shell alias in many dev setups.
-- Python 3.6+ only (f-strings are used throughout the codebase).
+- Python 3.7+ only (f-strings, dataclasses, and `subprocess.run(capture_output=...)` are used throughout the codebase).
 - When adding a new runtime dependency, add it to `requirements.txt` **and** update `LICENSES.md`.
