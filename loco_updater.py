@@ -61,7 +61,8 @@ def download_strings(loco_update_strategy, input_feature_tag):
         shutil.rmtree(loco_tmp_dir)
 
     android_archive_name = "android.zip"
-    android_archive_path = download_zip(tag="android,!android-*", loco_key=loco_key, archive_name=android_archive_name)
+    android_tag = tag if is_tag_provided and tag.startswith("android-") else "android,!android-*"
+    android_archive_path = download_zip(tag=android_tag, loco_key=loco_key, archive_name=android_archive_name)
     if android_archive_path is None:
         return None
 
