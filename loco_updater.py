@@ -12,7 +12,7 @@ import requests
 
 import config as config
 import loco_validator.validator as loco_validator
-from file_manipulations_utils import insert_after_line_or_warn, find_closest_parent_git_directory, insert_before_line_or_warn
+from file_manipulations_utils import find_closest_parent_git_directory, insert_before_line_or_warn
 from print_utils import color, Colors
 from utils.android_xml_formatter import indent_android_strings_xml
 
@@ -156,7 +156,7 @@ def register_android_xml_namespaces():
     ET.register_namespace('app', 'http://schemas.android.com/apk/res-auto')
 
 
-def update_loco(target_ids, loco_update_strategy, extracted_dir_root):
+def update_loco(target_ids, loco_update_strategy, extracted_dir_root, module_relative_path):
     os.chdir(project_root)
 
     # Copy the strings.xml files from the archive to the project's values folder
@@ -187,7 +187,7 @@ def update_loco(target_ids, loco_update_strategy, extracted_dir_root):
             append_new_file_header(target_file_path)
 
     if has_initialized_new_strings:
-        add_string_validation_ci_workflow()
+        add_string_validation_ci_workflow(module_relative_path)
 
     print("String resources updated")
 
@@ -198,8 +198,9 @@ def create_empty_file(file):
     file.write_text("<resources/>")
 
 
-def add_string_validation_ci_workflow():
-    git_project_directory = find_closest_parent_git_directory(project_root)
+def add_string_validation_ci_workflow(module_relative_path):
+    module_path = Path(project_root) / ".." / module_relative_path
+    git_project_directory = find_closest_parent_git_directory(module_path)
 
     if git_project_directory is None:
         print("Warning: Could not update string validation CI workflow. Do it manually")
@@ -212,16 +213,10 @@ def add_string_validation_ci_workflow():
 
     workflow_file_path = workflow_file.__str__()
 
-    new_module_config = """TODO_PROJECT_NAME:
-            global:
-              project_root: "${PR_PATH}/TODO\""""
-    insert_after_line_or_warn(workflow_file_path, new_module_config, "cat <<EOF > ink_utils/settings.yml")
-
-    new_validation_task = """- name: Run Ink validation for TODO module
+    new_validation_task = f"""- name: Run Ink validation for {module_relative_path.split("/")[-1]} module
         run: |
           source ink_utils/venv/bin/activate
-          python ink_utils/main.py project TODO_PROJECT_NAME
-          python ink_utils/main.py loco --check --verbose
+          python ink_utils/main.py loco --module {module_relative_path} --check --verbose
 """
     insert_before_line_or_warn(workflow_file_path, new_validation_task, "- name: Run Ink validation")
 

@@ -91,7 +91,7 @@ def update_loco(args):
         )
 
         try:
-            import_strings(args, loco_update_strategy, args.tag)
+            import_strings(args, loco_update_strategy, args.tag, args.module)
         except LocoImportError as _:
             failed_projects.append(project)
 
@@ -121,7 +121,7 @@ def update_loco_core(args):
         )
 
         try:
-            import_strings(args, loco_update_strategy, args.tag)
+            import_strings(args, loco_update_strategy, args.tag, args.module)
         except LocoImportError as _:
             failed_projects.append(project)
 
@@ -135,7 +135,7 @@ def get_module_or_default(args, default):
     return default if args.module is None else "/../" + args.module
 
 
-def import_strings(args, loco_update_strategy, feature_tag):
+def import_strings(args, loco_update_strategy, feature_tag, module_relative_path):
     @contextmanager
     def download_resources():
         try:
@@ -148,7 +148,7 @@ def import_strings(args, loco_update_strategy, feature_tag):
             lu.remove_downloaded_strings()
 
     def update_resources(extracted_dir_root):
-        lu.update_loco(args.target_ids, loco_update_strategy, extracted_dir_root)
+        lu.update_loco(args.target_ids, loco_update_strategy, extracted_dir_root, module_relative_path)
 
     def compute_diffs(extracted_dir_root):
         lu.compute_project_diffs(loco_update_strategy, extracted_dir_root)
