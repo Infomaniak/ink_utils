@@ -41,6 +41,8 @@ def construct_prompt(seeds: Dict[str, SeedValue], languages: List[str], prompt_c
         "",
         "When translating 'transfer' / 'transfert' take it as a file transfer not a money transfer unless otherwise indicated.",
         "",
+        "When translating product names in plural, do not pluralize the product names. Avoid saying 'your 3 kDrives' for example.",
+        "",
         "Provided translations (use these as the source of truth):",
     ]
 
