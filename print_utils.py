@@ -27,6 +27,10 @@ def color(text, rgb):
         )
 
 
+def dim(text):
+    return f"\033[2m{text}\033[0m"
+
+
 class Colors:
     red = (245, 90, 66)
     orange = (245, 170, 66)

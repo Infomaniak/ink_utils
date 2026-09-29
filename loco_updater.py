@@ -13,7 +13,7 @@ import requests
 import config as config
 import loco_validator.validator as loco_validator
 from file_manipulations_utils import find_closest_parent_git_directory, insert_before_line_or_warn
-from print_utils import color, Colors
+from print_utils import color, Colors, dim
 from utils.android_xml_formatter import indent_android_strings_xml
 
 loco_tmp_dir = "/tmp/ink_archive"
@@ -253,12 +253,58 @@ def compute_project_diffs(loco_update_strategy, extracted_dir_root):
 
 def pretty_print_diff(id_diffs):
     print("\nStatus compared to the remote")
-    all_equal = all(v == next(iter(id_diffs.values())) for v in id_diffs.values())
-    if all_equal:
-        print(next(iter(id_diffs.values())).get_ui_formatted_string())
-    else:
+    all_languages = list(id_diffs.keys())
+    width = shutil.get_terminal_size().columns
+
+    categories = [("To add", "+", "added", Colors.green),
+                  ("to update", "~", "updated", Colors.blue),
+                  ("to remove", "-", "removed", Colors.red)]
+
+    summary = []
+    previews = []
+    for label, symbol, attribute, category_color in categories:
+        # Pivot by key: key -> languages where it differs
+        key_languages = {}
         for language, diff in id_diffs.items():
-            print(f"[{language}]: {diff.get_ui_formatted_string()}")
+            for key in getattr(diff, attribute):
+                key_languages.setdefault(key, []).append(language)
+
+        count = len(key_languages)
+        summary.append(f"{label}: {color(count, category_color) if count > 0 else count}")
+        if count == 0:
+            continue
+
+        # Keys differing in every language first, they're the most meaningful
+        sorted_keys = sorted(key_languages, key=lambda k: (-len(key_languages[k]), k))
+        items = []
+        for key in sorted_keys:
+            languages = key_languages[key]
+            items.append(key if len(languages) == len(all_languages) else f"{key} ({', '.join(languages)})")
+
+        prefix = f"  {symbol} "
+        line = _fit_items_on_one_line(items, width - len(prefix))
+        previews.append(f"  {color(symbol, category_color)} {dim(line)}")
+
+    print(", ".join(summary))
+    for preview in previews:
+        print(preview)
+
+
+def _fit_items_on_one_line(items, max_width):
+    """Joins as many items as fit in max_width, ending with "… +N" for the ones left out."""
+    shown = []
+    for i, item in enumerate(items):
+        remaining = len(items) - i - 1
+        overflow = f", … +{remaining}" if remaining > 0 else ""
+        candidate = ", ".join(shown + [item])
+        if len(candidate + overflow) > max_width:
+            break
+        shown.append(item)
+
+    hidden = len(items) - len(shown)
+    if not shown:
+        return f"… +{hidden}"
+    return ", ".join(shown) + (f", … +{hidden}" if hidden > 0 else "")
 
 
 def download_zip(tag, loco_key, archive_name):
@@ -435,23 +481,17 @@ def get_id_diffs(root_before, root_after):
     }
 
     return IdDiff(
-        added=len(added_names),
-        removed=len(removed_names),
-        updated=len(updated_names),
+        added=added_names,
+        removed=removed_names,
+        updated=updated_names,
     )
 
 
 @dataclass
 class IdDiff:
-    added: int = 0
-    removed: int = 0
-    updated: int = 0
-
-    def get_ui_formatted_string(self):
-        to_add = color(self.added, Colors.green) if self.added > 0 else self.added
-        to_update = color(self.updated, Colors.blue) if self.updated > 0 else self.updated
-        to_remove = color(self.removed, Colors.red) if self.removed > 0 else self.removed
-        return f"To add: {to_add}, to update: {to_update}, to remove: {to_remove}"
+    added: set
+    removed: set
+    updated: set
 
 
 def get_ui_acronym_of(value_folder):
