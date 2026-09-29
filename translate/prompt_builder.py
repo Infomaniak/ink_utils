@@ -41,6 +41,10 @@ def construct_prompt(seeds: Dict[str, SeedValue], languages: List[str], prompt_c
         "",
         "When translating 'transfer' / 'transfert' take it as a file transfer not a money transfer unless otherwise indicated.",
         "",
+        "When translating concepts related to 'attendee' or 'guest' in english, or 'invité' or 'participant' in french use the "
+        "wording 'invité' and 'attendee' across all languages to stay coherent. This is important for the calendar app. If there "
+        "are no indication of an app, assume that it's important.",
+        "",
         "When translating product names in plural, do not pluralize the product names. Avoid saying 'your 3 kDrives' for example.",
         "",
         "Provided translations (use these as the source of truth):",
